@@ -1,6 +1,6 @@
 # Pi Arcade
 
-Pi Arcade is a controller-first fullscreen launcher for a Raspberry Pi 5 single-player cabinet. It separates a 323-title compatibility catalog from the installed library, applies per-game RetroArch configuration, explains controls before play, monitors emulator processes, and restores launcher focus on exit.
+Pi Arcade is a controller-first fullscreen launcher for a Raspberry Pi 5 single-player cabinet. It separates a 715-title compatibility catalog from the installed library, applies per-game RetroArch configuration, explains controls before play, monitors emulator processes, and restores launcher focus on exit.
 
 ## Raspberry Pi installation
 
@@ -14,13 +14,15 @@ chmod +x install.sh
 sudo reboot
 ```
 
-The installer verifies Pi 5/aarch64/free space, installs Node, RetroArch and available libretro cores, builds the ARM64 AppImage natively, installs the authorized game, creates game/save/config directories, and adds an idempotent per-user labwc autostart entry. It never reflashes storage, runs the launcher as root, modifies user ROMs, or removes maintenance access.
+The installer verifies Pi 5/aarch64/free space, installs Node, RetroArch and required Libretro cores, builds the ARM64 AppImage natively, downloads and checksum-verifies 12 games from MAME's authorized ROM page, installs the bundled open-source game, creates game/save/config directories, and adds an idempotent per-user labwc autostart entry. It never reflashes storage, runs the launcher as root, modifies user ROMs, or removes maintenance access.
 
 After reboot, open **Settings → Controller test & calibration**, verify every physical input, save the controller, and run **Diagnostics → Verify all installed games**. The exact USB encoder identifiers and indices cannot be known until it is connected.
 
-## Included game
+## Authorized playable games
 
-VOID LANCER 1.0.0 is built from its MIT-licensed upstream source and included as a redistributable NES ROM. Its checksum, license, build procedure, and validation evidence are in [`content/void-lancer/PROVENANCE.md`](content/void-lancer/PROVENANCE.md). No commercial ROMs or copyrighted cover art are included.
+VOID LANCER 1.0.0 is built from its MIT-licensed upstream source and included as a redistributable NES ROM. Its checksum, license, build procedure, and validation evidence are in [`content/void-lancer/PROVENANCE.md`](content/void-lancer/PROVENANCE.md).
+
+`npm run acquire:authorized` downloads 12 additional games directly from MAME's official ROM page and verifies every byte count and SHA-256 against [`content/acquisition-manifest.json`](content/acquisition-manifest.json). These archives are deliberately ignored by Git and are not redistributed by this repository. `npm run test:authorized` launches every downloaded set through RetroArch and MAME 2003-Plus and saves per-game logs plus a JSON report.
 
 ## Supported files
 
@@ -39,6 +41,8 @@ npm ci
 npm test
 npm run lint
 npm run verify:content
+npm run acquire:authorized
+npm run test:authorized
 npm run build
 npm run test:e2e
 ```

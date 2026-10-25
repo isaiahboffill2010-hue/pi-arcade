@@ -5,10 +5,10 @@
 | Raspberry Pi OS | 64-bit Desktop, current Bookworm-or-newer release | Raspberry Pi documentation: Wayland/labwc is the supported default |
 | Launcher | Electron Linux ARM64 | Electron publishes Linux arm64 binaries |
 | Autostart | Per-user labwc autostart | Raspberry Pi kiosk guidance; never root |
-| RetroArch | Distribution package first, validate installed cores on device | Libretro documents aarch64 Pi use but warns repositories/cores vary |
+| RetroArch | Distribution package first; official Libretro aarch64 buildbot fallback with recorded SHA-256 | Package availability varies between Raspberry Pi OS releases |
 | Encoder | USB HID, gamepad or keyboard mode discovered at runtime | Exact bundled encoder not authoritatively verified |
 
-Initial file routing supports NES, SNES, Genesis, PlayStation cue sheets, CHD, and intact arcade ZIP sets. Routing means recognized/importable, not performance-verified. Analog, light-gun, trackball, wheel, dual-player, N64, PS2, and newer-console games are not represented as cabinet-compatible.
+File routing supports NES, SNES, Genesis, Sega CD, PlayStation cue sheets, CHD, and intact arcade ZIP sets. Ambiguous cue/CHD files are matched by known title metadata before falling back to PlayStation. Routing means recognized/importable, not performance-verified. Analog, light-gun, trackball, wheel, dual-player, N64, PS2, and newer-console games are flagged rather than represented as verified for this one-stick cabinet.
 
 Primary references:
 

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "notice": "Downloaded directly from mamedev.org under the permissions stated on that site. Do not redistribute these files from this repository.",
+  "packages": [
+    {"id":"alienar","title":"Alien Arena","url":"https://www.mamedev.org/roms/alienar/alienar.zip","bytes":17005,"sha256":"cc0e0f7e284d6ec8d3c5e3c161e8ff330bf345bfa7ddf45df917ec9fbd772152","license":"Free for home use","profileId":"shooter-2"},
+    {"id":"circus","title":"Circus","url":"https://www.mamedev.org/roms/circus/circus.zip","bytes":6152,"sha256":"27d3952dba171d50ef63a7a651e063f83830d2e07e4799dadcc5c42e0371d424","license":"Free noncommercial use","profileId":"arcade-1"},
+    {"id":"carpolo","title":"Car Polo","url":"https://www.mamedev.org/roms/carpolo/carpolo.zip","bytes":5562,"sha256":"cde6077be7cf552f2147181a3ef858ee261b0adce47198cadd16d33dedaa928f","license":"Free noncommercial use","profileId":"driving-digital"},
+    {"id":"sidetrac","title":"Side Trak","url":"https://www.mamedev.org/roms/sidetrac/sidetrac.zip","bytes":5491,"sha256":"2ac03e47d67db378166b18ec3a7eaf40c3791a780a44042f80d24e9141a3f228","license":"Free noncommercial use","profileId":"driving-digital"},
+    {"id":"ripcord","title":"Rip Cord","url":"https://www.mamedev.org/roms/ripcord/ripcord.zip","bytes":5906,"sha256":"bc89a9c731745b1a04c21541c28d383be96332498a6dfdd29a44f4225e04d006","license":"Free noncommercial use","profileId":"arcade-1"},
+    {"id":"fireone","title":"Fire One!","url":"https://www.mamedev.org/roms/fireone/fireone.zip","bytes":23227,"sha256":"2fd017b91d75d3c364510b639dc3d660b5697b4ab50de5fa19ba2bbf481736ff","license":"Free noncommercial use","profileId":"shooter-2"},
+    {"id":"starfire","title":"Star Fire","url":"https://www.mamedev.org/roms/starfire/starfire.zip","bytes":16748,"sha256":"5ede6d40e3b577a810f5c02a98de2683b3c3e8d12c7fa46e12014d6e5197a408","license":"Free noncommercial use","profileId":"shooter-2"},
+    {"id":"targ","title":"Targ","url":"https://www.mamedev.org/roms/targ/targ.zip","bytes":8157,"sha256":"a24eb4fec6487c8d09ac44d87a4fefb1b453b8eb1ca5fdeb1dd73b98eaf272e3","license":"Free noncommercial use","profileId":"arcade-1"},
+    {"id":"spectar","title":"Spectar","url":"https://www.mamedev.org/roms/spectar/spectar.zip","bytes":10105,"sha256":"222e4fb639571ffb0d73f4ad19376211ecfe9798067826b20e4b1790886705ba","license":"Free noncommercial use","profileId":"shooter-2"},
+    {"id":"gridlee","title":"Gridlee","url":"https://www.mamedev.org/roms/gridlee/gridlee.zip","bytes":25516,"sha256":"df977ceba0ae1c8d0ecf489ae8423390ff5c7c76ce95f5ee6ba9bc892b18056e","license":"Free noncommercial use","profileId":"arcade-1"},
+    {"id":"robby","title":"Robby Roto","url":"https://www.mamedev.org/roms/robby/robby.zip","bytes":27915,"sha256":"d3f7ae3afeeedb7d2476ea05e326a6a6f6e851c969f07a1de36133fcb4d0a8d8","license":"Free noncommercial use","profileId":"arcade-1"},
+    {"id":"supertnk","title":"Super Tank","url":"https://www.mamedev.org/roms/supertnk/supertnk.zip","bytes":13383,"sha256":"c24002ca4e4a63ffe11f45cc96bed4441c2a95930bff79da413fd6197eca31c0","license":"Free noncommercial use","profileId":"shooter-2"}
+  ]
+}

@@ -11,19 +11,22 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "package:pi": "npm run build && electron-builder --linux AppImage --arm64",
     "package:pi:dir": "npm run build && electron-builder --linux dir --arm64",
-    "test": "vitest run",
+    "test": "vitest run tests",
+    "test:e2e": "npm run build && playwright test",
     "test:watch": "vitest",
+    "verify:content": "node scripts/verify-content.mjs",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint . --max-warnings=0"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
     "@eslint/js": "latest",
+    "@playwright/test": "^1.64.1",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
@@ -40,7 +43,19 @@
   "build": {
     "appId": "local.piarcade.launcher",
     "productName": "Pi Arcade",
-    "files": ["dist/**", "dist-electron/**", "assets/**"],
-    "linux": { "target": ["AppImage"], "category": "Game", "executableName": "pi-arcade" }
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "electron/preload.cjs",
+      "assets/**",
+      "content/**"
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game",
+      "executableName": "pi-arcade"
+    }
   }
 }

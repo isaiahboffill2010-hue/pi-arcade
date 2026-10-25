@@ -1,0 +1,4 @@
+/* global console, process */
+import{createHash}from'node:crypto';import{readFile,stat}from'node:fs/promises';import path from'node:path';import{fileURLToPath}from'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');const manifest=JSON.parse(await readFile(path.join(root,'content','manifest.json'),'utf8'));let failed=false;
+for(const item of manifest.packages){const file=path.resolve(root,'content',item.file);if(!file.startsWith(path.join(root,'content')+path.sep))throw new Error(`Unsafe manifest path: ${item.file}`);const data=await readFile(file);const hash=createHash('sha256').update(data).digest('hex');const size=(await stat(file)).size;const license=await readFile(path.resolve(root,'content',item.licenseFile),'utf8');const ok=hash===item.sha256&&size===item.bytes&&license.length>20&&item.redistributable===true;console.log(`${ok?'PASS':'FAIL'} ${item.id} ${size} bytes ${hash}`);if(!ok)failed=true}if(failed)process.exitCode=1;

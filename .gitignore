@@ -6,3 +6,8 @@ release/
 .env*
 library/
 saves/
+tools/retroarch/
+artifacts/
+test-results/
+playwright-report/
+*.tsbuildinfo

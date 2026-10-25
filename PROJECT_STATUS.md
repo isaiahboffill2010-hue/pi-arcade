@@ -1,20 +1,31 @@
 # Project status — 2026-10-25
 
-## Verified on the development host
+## Completed without Raspberry Pi hardware
 
-- Windows x64 host, Node.js 24.19.0 and Git 2.53.0 detected.
-- Workspace began empty and was not a Git repository.
-- No RetroArch, MAME, FBNeo, accessible Raspberry Pi, or detected arcade HID controller was available.
-- Secure Electron process separation, UI, local importer, RetroArch command adapter, and diagnostics implemented.
-- Automated results: 4/4 tests passed, lint passed, and renderer/Electron production compilation passed.
-- Linux ARM64 runtime packaging reached a complete unpacked application. AppImage compression is blocked on this Windows host because the cross-host `mksquashfs` helper is unavailable; the same packaging command remains in the Pi-native installer.
+- Full Electron/React launcher screens: home, installed library, categories, joystick search keyboard, favorites, details, visual control preview, settings, import, live controller test, and diagnostics.
+- Secure context-isolated CommonJS preload; renderer has no Node access; narrow IPC only.
+- Persistent settings, favorites, recent plays, play counts, controller configuration, verification history, backups, and restore.
+- Recursive import, extension/platform detection, normalized catalog matching, custom entries, integrity hashing, and installed/catalog separation.
+- 323 unique catalog records and eight reusable control profiles covering one-, two-, four-, six-, eight-button, Mortal Kombat, digital racing, and PlayStation layouts.
+- RetroArch executable/core detection, safe argument arrays, fullscreen per-game configs, generated input mappings, save states, logging, single-process ownership, clean exit, and focus restoration.
+- Staged verification for file, checksum, emulator/core/config, launch, five-second stability, termination, and logged result storage.
+- One redistributable game installed in the repository with complete provenance.
+- One-command Pi installer, safe uninstall, crash restart loop, labwc autostart, optional core packages, content installation, report generation, and CI dry-run coverage.
 
-## Not yet claimable
+## Measured results
 
-- Raspberry Pi ARM64 package execution, Wayland fullscreen/focus recovery, physical encoder mapping, audio/video latency, emulator core availability, real game launch/runtime/exit, frame performance, and boot autostart all require the actual Pi and cabinet.
-- No game has been acquired or launched. Commercial ROMs are not included.
-- The exact encoder bundled with the referenced Micro Center kit could not be confirmed from an authoritative accessible product specification; calibration is therefore mandatory.
+- VOID LANCER source build and upstream smoke test passed.
+- Official RetroArch 1.22.2 + Mesen loaded the ROM successfully on Windows. Mesen reported mapper 0, 32 KiB PRG, 8 KiB CHR, 256×240 geometry and 60.0998 FPS nominal timing; frame-limited execution returned without an immediate failure.
+- Unit/integration: 8 passed.
+- Electron Playwright navigation smoke test: 1 passed.
+- TypeScript/Vite/Electron production build: passed.
+- ESLint: passed with zero warnings.
+- Content checksum/license verification: passed.
+- Linux ARM64 unpacked Electron package: passed. Windows cross-host AppImage compression remains unavailable; native ARM CI/Pi build is configured.
 
-## Next hardware milestone
+## Physical-only blockers
 
-Run `scripts/install-pi.sh --dry-run`, then install on the Pi. Connect the encoder and execute the checklist in `docs/HARDWARE_TEST.md`. Supply one legally obtained game file or select an explicitly licensed homebrew title whose official download can be checksum-pinned.
+- USB encoder VID/PID, button indices, keyboard-vs-gamepad mode, reconnect behavior, and actual Start+Select hold must be recorded on the cabinet.
+- Raspberry Pi Wayland fullscreen/focus, audio selection/latency, temperature, frame pacing and autostart reboot must be measured on the Pi.
+- A real person must verify gameplay visuals, sound and physical control correctness. Automated launch evidence is not that claim.
+- Commercial games require lawful user-supplied files and, for PlayStation, any legally required BIOS. Their catalog metadata is not installation evidence.

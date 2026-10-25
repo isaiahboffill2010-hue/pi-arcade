@@ -1,43 +1,56 @@
 # Pi Arcade
 
-A controller-first Electron launcher for a Raspberry Pi 5 single-player arcade cabinet. The current milestone is a buildable launcher foundation—not a claim of completed cabinet validation.
-
-## Desktop development
-
-Requirements: Node.js 22+ and npm.
-
-```sh
-npm ci
-npm run dev
-npm test
-npm run build
-```
-
-Keyboard preview: `Tab` moves focus, arrow keys work in standard controls, `Enter` selects, and `Escape` returns home. Native controller calibration requires the cabinet.
+Pi Arcade is a controller-first fullscreen launcher for a Raspberry Pi 5 single-player cabinet. It separates a 323-title compatibility catalog from the installed library, applies per-game RetroArch configuration, explains controls before play, monitors emulator processes, and restores launcher focus on exit.
 
 ## Raspberry Pi installation
 
-Use Raspberry Pi OS 64-bit Desktop on a Pi 5. Copy this repository to the Pi and run:
+Start with current Raspberry Pi OS 64-bit Desktop, connect the Pi to the internet, then run:
 
 ```sh
-bash scripts/install-pi.sh --dry-run
-bash scripts/install-pi.sh --enable-autostart
+git clone https://github.com/isaiahboffill2010-hue/pi-arcade.git
+cd pi-arcade
+chmod +x install.sh
+./install.sh
+sudo reboot
 ```
 
-The installer refuses non-Linux, non-aarch64, and non-Pi-5 hosts; checks free space; installs RetroArch and controller diagnostics; builds an ARM64 AppImage; and optionally appends an idempotent labwc autostart entry. It does not reflash the Pi, run the launcher as root, download commercial ROMs, or alter saves.
+The installer verifies Pi 5/aarch64/free space, installs Node, RetroArch and available libretro cores, builds the ARM64 AppImage natively, installs the authorized game, creates game/save/config directories, and adds an idempotent per-user labwc autostart entry. It never reflashes storage, runs the launcher as root, modifies user ROMs, or removes maintenance access.
 
-To remove only the launcher while preserving ROMs, saves, RetroArch and diagnostics:
+After reboot, open **Settings → Controller test & calibration**, verify every physical input, save the controller, and run **Diagnostics → Verify all installed games**. The exact USB encoder identifiers and indices cannot be known until it is connected.
+
+## Included game
+
+VOID LANCER 1.0.0 is built from its MIT-licensed upstream source and included as a redistributable NES ROM. Its checksum, license, build procedure, and validation evidence are in [`content/void-lancer/PROVENANCE.md`](content/void-lancer/PROVENANCE.md). No commercial ROMs or copyrighted cover art are included.
+
+## Supported files
+
+- NES: `.nes` → Mesen
+- SNES: `.sfc`, `.smc` → Snes9x
+- Genesis: `.md`, `.gen` → Genesis Plus GX
+- PlayStation: `.cue`, `.chd` → PCSX-ReARMed
+- Arcade and Neo Geo: intact `.zip` sets → FinalBurn Neo or MAME according to catalog metadata
+
+Importing recursively scans up to four levels, matches normalized filenames to catalog entries, preserves arcade archives, and creates custom entries for unknown supported files. A catalog entry is never presented as installed until a real file is discovered.
+
+## Desktop development and verification
 
 ```sh
-bash scripts/uninstall-pi.sh
+npm ci
+npm test
+npm run lint
+npm run verify:content
+npm run build
+npm run test:e2e
 ```
 
-## Controls and importing
+GitHub Actions repeats tests on Windows and Linux, performs two installer dry-runs, and creates an ARM64 AppImage on an ARM runner.
 
-The USB encoder is intentionally not assigned fixed button numbers. Encoder firmware varies. Import legally obtained `.nes`, `.sfc`, `.smc`, `.md`, `.gen`, `.cue`, `.chd`, or arcade `.zip` files from Settings. Arcade ZIP sets remain intact. Each installed entry receives a control profile; production calibration will bind physical inputs to those logical actions.
+## Maintenance
 
-## Legal content
+- Settings and library data are written atomically with a backup in Electron's user-data directory.
+- Export/restore is available under Settings.
+- Per-game logs and verification history are retained.
+- Automatic save-state loading/saving is configurable.
+- `bash scripts/uninstall-pi.sh` removes the launcher and autostart entry while preserving games, saves, RetroArch, and configuration.
 
-No copyrighted game files or cover art are bundled. Supported catalog entries and installed games are separate concepts. The importer only indexes user-supplied files; it does not download ROMs.
-
-See [PROJECT_STATUS.md](PROJECT_STATUS.md), [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and [docs/HARDWARE_TEST.md](docs/HARDWARE_TEST.md).
+See [hardware acceptance](docs/HARDWARE_TEST.md), [compatibility](docs/COMPATIBILITY.md), [test evidence](docs/TEST_REPORT.md), and [current limitations](PROJECT_STATUS.md).

@@ -1,16 +1,21 @@
 # Test report — 2026-10-25
 
-Host: Windows x64, Node.js 24.19.0. This is a development-host report, not cabinet certification.
+| Area | Result | Evidence boundary |
+|---|---|---|
+| Catalog/profile integrity | Pass: 323 unique games, every entry has a core and existing profile | Metadata/configuration only |
+| Import and matching | Pass | Temporary real files, recursive scanner and SHA-256 |
+| Launch argument security | Pass | Discrete arguments; relative paths rejected |
+| Unit/integration suite | Pass: 3 files, 8 tests | Windows development host |
+| Electron UI | Pass: 1 Playwright test | Real Electron window; home/settings/controller/library/search flows |
+| TypeScript/Vite/Electron build | Pass | Windows x64 host |
+| Lint | Pass | Zero errors/warnings |
+| Authorized content integrity | Pass | 40,976 bytes; SHA-256 matches manifest |
+| Upstream game smoke test | Pass | 2,651 frames; stage 3 and boss state reached by upstream harness |
+| Emulator launch | Pass | RetroArch 1.22.2/Mesen loaded mapper-0 ROM and ran to frame limit |
+| Save path initialization | Pass | RetroArch created Mesen save/state routing |
+| ARM64 directory packaging | Pass | Cross-packaged official Electron ARM64 runtime |
+| AppImage | Configured in native ARM CI/Pi installer | Windows `mksquashfs` unavailable |
+| Installer fresh/repeat dry-run | Configured in Linux CI | Docker/WSL unavailable locally |
+| Cabinet hardware | Blocked | Pi and encoder were not connected |
 
-| Check | Result |
-|---|---|
-| Vitest | Passed: 2 files, 4 tests |
-| ESLint | Passed: zero warnings/errors |
-| TypeScript + Vite + Electron compilation | Passed |
-| Linux ARM64 Electron directory packaging | Passed after package-entry correction |
-| AppImage assembly on Windows | Blocked: electron-builder's cross-host `mksquashfs` helper was unavailable (`ENOENT`) |
-| Raspberry Pi execution | Blocked: no Pi accessible |
-| USB encoder test | Blocked: no arcade HID controller detected |
-| Actual game launch/runtime/exit | Blocked: no emulator or legally supplied game file on host |
-
-The tests verify recognized-extension import behavior, installed/file-verified state, safe argument-array command construction, path preservation, and rejection of relative or unsupported launches. They do not verify emulation, visuals, physical input, sound, or performance.
+The automated emulator test proves file/core loading and bounded runtime. It does not prove human gameplay, correct sound, physical controls, or Raspberry Pi performance.

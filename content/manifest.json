@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "id": "void-lancer-1.0.0",
+      "gameId": "nes:void-lancer",
+      "version": "1.0.0",
+      "file": "void-lancer/void-lancer.nes",
+      "sha256": "5eb801aca68131a3d17fa82d8901d46f6098b878d1e00cd1c47d00c001c2405a",
+      "bytes": 40976,
+      "source": "https://github.com/Riyoway/void-lancer-nes",
+      "license": "MIT",
+      "licenseFile": "void-lancer/LICENSE",
+      "redistributable": true
+    }
+  ]
+}

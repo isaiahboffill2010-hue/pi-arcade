@@ -47,8 +47,7 @@ ensure_core(){
 }
 if $DRY_RUN;then log 'Would ensure official ARM64 Libretro core fallbacks';else for core in mesen snes9x mgba genesis_plus_gx pcsx_rearmed fbneo flycast mame2003_plus;do ensure_core "$core";done;fi
 run npm ci --prefix "$ROOT"
-run env PI_ARCADE_ACQUIRE_DIR="$GAME_DIR" npm run acquire:authorized --prefix "$ROOT"
-run env PI_ARCADE_GAME_DIR="$GAME_DIR" PI_ARCADE_TEST_LOG_DIR="$CONFIG_DIR/authorized-tests" npm run test:authorized --prefix "$ROOT"
+run npm run verify:content --prefix "$ROOT"
 run npm run build --prefix "$ROOT";run npm run package:pi --prefix "$ROOT"
 APPIMAGE="$(find "$ROOT/dist" -maxdepth 1 -name '*arm64.AppImage' -print -quit 2>/dev/null||true)";if ! $DRY_RUN&&[[ -z "$APPIMAGE" ]];then echo 'ERROR: ARM64 AppImage was not created';exit 1;fi
 if ! $DRY_RUN;then install -m 0755 "$APPIMAGE" "$APP_DIR/pi-arcade.AppImage";install -m 0644 "$ROOT/content/void-lancer/void-lancer.nes" "$GAME_DIR/void-lancer.nes";install -m 0644 "$ROOT/content/void-lancer/LICENSE" "$GAME_DIR/VOID-LANCER-LICENSE";fi

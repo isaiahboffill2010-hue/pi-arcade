@@ -15,8 +15,6 @@
     "test:e2e": "npm run build && playwright test",
     "test:watch": "vitest",
     "verify:content": "node scripts/verify-content.mjs",
-    "acquire:authorized": "node scripts/acquire-authorized.mjs",
-    "test:authorized": "node scripts/test-authorized-games.mjs",
     "prepare:mvcx:windows": "powershell -ExecutionPolicy Bypass -File scripts/prepare-mvcx-windows.ps1",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint . --max-warnings=0"

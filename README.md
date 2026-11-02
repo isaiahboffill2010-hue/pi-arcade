@@ -22,7 +22,7 @@ After reboot, open **Settings → Controller test & calibration**, verify every 
 
 VOID LANCER 1.0.0 is built from its MIT-licensed upstream source and included as a redistributable NES ROM. Its checksum, license, build procedure, and validation evidence are in [`content/void-lancer/PROVENANCE.md`](content/void-lancer/PROVENANCE.md).
 
-`npm run acquire:authorized` downloads 12 additional games directly from MAME's official ROM page and verifies every byte count and SHA-256 against [`content/acquisition-manifest.json`](content/acquisition-manifest.json). These archives are deliberately ignored by Git and are not redistributed by this repository. `npm run test:authorized` launches every downloaded set through RetroArch and MAME 2003-Plus and saves per-game logs plus a JSON report.
+The catalog includes metadata for 12 games available from MAME's official ROM page, but the Pi installer does not download optional game archives. Copy externally acquired games into the Pi game directory and let the launcher detect them. Only bundled, redistributable content is verified automatically.
 
 ## Supported files
 
@@ -41,8 +41,6 @@ npm ci
 npm test
 npm run lint
 npm run verify:content
-npm run acquire:authorized
-npm run test:authorized
 npm run build
 npm run test:e2e
 ```

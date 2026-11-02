@@ -18,7 +18,7 @@ if ! $DRY_RUN;then
   fi
 fi
 apt_optional(){if apt-cache show "$1" >/dev/null 2>&1;then run sudo apt-get install -y "$1";else log "Optional package unavailable: $1";fi}
-for pkg in libretro-mesen libretro-snes9x libretro-genesisplusgx libretro-pcsx-rearmed libretro-fbneo libretro-flycast libretro-mame libretro-mame2003-plus;do apt_optional "$pkg";done
+for pkg in libretro-mesen libretro-snes9x libretro-mgba libretro-genesisplusgx libretro-pcsx-rearmed libretro-fbneo libretro-flycast libretro-mame libretro-mame2003-plus;do apt_optional "$pkg";done
 CORE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/retroarch/cores";run mkdir -p "$APP_DIR" "$BIN_DIR" "$CONFIG_DIR" "$GAME_DIR" "$SAVE_DIR" "$CORE_DIR" "$HOME/.config/labwc"
 core_exists(){ [[ -f "$CORE_DIR/$1_libretro.so"||-f "/usr/lib/aarch64-linux-gnu/libretro/$1_libretro.so"||-f "/usr/lib/libretro/$1_libretro.so" ]];}
 ensure_core(){
@@ -31,13 +31,14 @@ ensure_core(){
   sha256sum "$CORE_DIR/${core}_libretro.so">"$CORE_DIR/${core}_libretro.so.sha256"
   rm -f "$archive"
 }
-if $DRY_RUN;then log 'Would ensure official ARM64 Libretro core fallbacks';else for core in mesen snes9x genesis_plus_gx pcsx_rearmed fbneo flycast mame2003_plus;do ensure_core "$core";done;fi
+if $DRY_RUN;then log 'Would ensure official ARM64 Libretro core fallbacks';else for core in mesen snes9x mgba genesis_plus_gx pcsx_rearmed fbneo flycast mame2003_plus;do ensure_core "$core";done;fi
 run npm ci --prefix "$ROOT"
 run env PI_ARCADE_ACQUIRE_DIR="$GAME_DIR" npm run acquire:authorized --prefix "$ROOT"
 run env PI_ARCADE_GAME_DIR="$GAME_DIR" PI_ARCADE_TEST_LOG_DIR="$CONFIG_DIR/authorized-tests" npm run test:authorized --prefix "$ROOT"
 run npm run build --prefix "$ROOT";run npm run package:pi --prefix "$ROOT"
 APPIMAGE="$(find "$ROOT/dist" -maxdepth 1 -name '*arm64.AppImage' -print -quit 2>/dev/null||true)";if ! $DRY_RUN&&[[ -z "$APPIMAGE" ]];then echo 'ERROR: ARM64 AppImage was not created';exit 1;fi
 if ! $DRY_RUN;then install -m 0755 "$APPIMAGE" "$APP_DIR/pi-arcade.AppImage";install -m 0644 "$ROOT/content/void-lancer/void-lancer.nes" "$GAME_DIR/void-lancer.nes";install -m 0644 "$ROOT/content/void-lancer/LICENSE" "$GAME_DIR/VOID-LANCER-LICENSE";fi
+if [[ -n "${PI_ARCADE_MVCX_SOURCE:-}" ]];then if $DRY_RUN;then log "Would prepare user-supplied MVCX assets from $PI_ARCADE_MVCX_SOURCE";else bash "$ROOT/scripts/install-mvcx-pi.sh" "$PI_ARCADE_MVCX_SOURCE" "$GAME_DIR/Marvel vs Capcom X 3.0";fi;fi
 LAUNCHER="$BIN_DIR/pi-arcade-launch";if ! $DRY_RUN;then
   printf '%s\n' '#!/usr/bin/env bash' 'set -u' "export PI_ARCADE_GAME_DIR=\"$GAME_DIR\"" "while true; do \"$APP_DIR/pi-arcade.AppImage\" --ozone-platform-hint=auto; code=\$?; [[ \$code -eq 0 ]] && exit 0; logger -t pi-arcade \"launcher crashed with \$code; restarting\"; sleep 2; done" >"$LAUNCHER";chmod 0755 "$LAUNCHER"
 fi

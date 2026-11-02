@@ -58,3 +58,5 @@ GitHub Actions repeats tests on Windows and Linux, performs two installer dry-ru
 - `bash scripts/uninstall-pi.sh` removes the launcher and autostart entry while preserving games, saves, RetroArch, and configuration.
 
 See [hardware acceptance](docs/HARDWARE_TEST.md), [compatibility](docs/COMPATIBILITY.md), [test evidence](docs/TEST_REPORT.md), and [current limitations](PROJECT_STATUS.md).
+
+Marvel vs. Capcom X 3.0 is supported as a user-supplied MUGEN asset pack through a native Ikemen GO build; its copyrighted files are deliberately excluded from the repository. See [MVCX integration](docs/MVCX_INTEGRATION.md) for verified hashes, preparation, controls, ARM64 limitations, and redistribution requirements.

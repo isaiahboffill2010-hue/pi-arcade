@@ -2,8 +2,16 @@
 set -euo pipefail
 DRY_RUN=false; ENABLE_AUTOSTART=false; ALLOW_NON_PI=false
 for arg in "$@";do case "$arg" in --dry-run)DRY_RUN=true;;--enable-autostart)ENABLE_AUTOSTART=true;;--no-autostart)ENABLE_AUTOSTART=false;;--allow-non-pi)ALLOW_NON_PI=true;;*)echo "Unknown argument: $arg" >&2;exit 2;;esac;done
-run(){if $DRY_RUN;then printf 'DRY-RUN:';printf ' %q' "$@";printf '\n';else "$@";fi}
-log(){printf '[pi-arcade] %s\n' "$*";}
+run() {
+  if $DRY_RUN; then
+    printf 'DRY-RUN:'
+    printf ' %q' "$@"
+    printf '\n'
+  else
+    "$@"
+  fi
+}
+log() { printf '[pi-arcade] %s\n' "$*"; }
 [[ "$(uname -s)" == Linux ]]||{ echo 'ERROR: Linux required';exit 1; }
 ARCH="$(uname -m)";MODEL="unknown";[[ -r /proc/device-tree/model ]]&&MODEL="$(tr -d '\0' </proc/device-tree/model)"
 if ! $ALLOW_NON_PI;then [[ "$ARCH" == aarch64 ]]||{ echo "ERROR: aarch64 required (found $ARCH)";exit 1; };[[ "$MODEL" == *'Raspberry Pi 5'* ]]||{ echo "ERROR: Raspberry Pi 5 required (found $MODEL)";exit 1; };fi
@@ -17,10 +25,16 @@ if ! $DRY_RUN;then
     NODE_SETUP="$(mktemp)";curl -fsSL https://deb.nodesource.com/setup_22.x -o "$NODE_SETUP";sudo -E bash "$NODE_SETUP";rm -f "$NODE_SETUP";sudo apt-get install -y nodejs
   fi
 fi
-apt_optional(){if apt-cache show "$1" >/dev/null 2>&1;then run sudo apt-get install -y "$1";else log "Optional package unavailable: $1";fi}
+apt_optional() {
+  if apt-cache show "$1" >/dev/null 2>&1; then
+    run sudo apt-get install -y "$1"
+  else
+    log "Optional package unavailable: $1"
+  fi
+}
 for pkg in libretro-mesen libretro-snes9x libretro-mgba libretro-genesisplusgx libretro-pcsx-rearmed libretro-fbneo libretro-flycast libretro-mame libretro-mame2003-plus;do apt_optional "$pkg";done
 CORE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/retroarch/cores";run mkdir -p "$APP_DIR" "$BIN_DIR" "$CONFIG_DIR" "$GAME_DIR" "$SAVE_DIR" "$CORE_DIR" "$HOME/.config/labwc"
-core_exists(){ [[ -f "$CORE_DIR/$1_libretro.so"||-f "/usr/lib/aarch64-linux-gnu/libretro/$1_libretro.so"||-f "/usr/lib/libretro/$1_libretro.so" ]];}
+core_exists() { [[ -f "$CORE_DIR/$1_libretro.so" || -f "/usr/lib/aarch64-linux-gnu/libretro/$1_libretro.so" || -f "/usr/lib/libretro/$1_libretro.so" ]]; }
 ensure_core(){
   local core="$1" archive
   core_exists "$core"&&return 0

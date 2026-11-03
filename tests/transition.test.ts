@@ -1,0 +1,2 @@
+import{expect,it}from'vitest';import{readFile}from'node:fs/promises';
+it('keeps the fullscreen launcher rendered underneath games to prevent desktop exposure',async()=>{const launcher=await readFile(new URL('../electron/services/launcher.ts',import.meta.url),'utf8'),renderer=await readFile(new URL('../src/main.tsx',import.meta.url),'utf8');expect(launcher).not.toContain('window.hide()');expect(launcher).toContain('window.setKiosk(true)');expect(renderer).toContain('<GameTransition game={selected}/>');expect(renderer).toContain('if(gameRunning){history.buttons=')});

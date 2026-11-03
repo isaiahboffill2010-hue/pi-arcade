@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "id": "freedoom-0.13.0",
+      "priority": 20,
+      "complete": true,
+      "authorizationVerified": true,
+      "title": "Freedoom Phase 1 + Phase 2",
+      "kind": "game-data",
+      "url": "https://github.com/freedoom/freedoom/releases/download/v0.13.0/freedoom-0.13.0.zip",
+      "bytes": 24143781,
+      "sha256": "3f9b264f3e3ce503b4fb7f6bdcb1f419d93c7b546f4df3e874dd878db9688f59",
+      "license": "BSD-3-Clause",
+      "redistributable": true,
+      "archive": "freedoom-0.13.0.zip",
+      "extract": ["freedoom1.wad", "freedoom2.wad"]
+    },
+    {
+      "id": "prboom-windows-core",
+      "priority": 20,
+      "complete": true,
+      "authorizationVerified": true,
+      "title": "PrBoom Libretro Windows Core",
+      "kind": "emulator-core",
+      "url": "https://buildbot.libretro.com/nightly/windows/x86_64/latest/prboom_libretro.dll.zip",
+      "license": "GPL-2.0",
+      "redistributable": true,
+      "archive": "prboom_libretro.dll.zip",
+      "extract": ["prboom_libretro.dll"]
+    }
+  ]
+}

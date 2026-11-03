@@ -16,7 +16,7 @@ log() { printf '[pi-arcade] %s\n' "$*"; }
 ARCH="$(uname -m)";MODEL="unknown";[[ -r /proc/device-tree/model ]]&&MODEL="$(tr -d '\0' </proc/device-tree/model)"
 if ! $ALLOW_NON_PI;then [[ "$ARCH" == aarch64 ]]||{ echo "ERROR: aarch64 required (found $ARCH)";exit 1; };[[ "$MODEL" == *'Raspberry Pi 5'* ]]||{ echo "ERROR: Raspberry Pi 5 required (found $MODEL)";exit 1; };fi
 available_kb=$(df -Pk "$HOME"|awk 'NR==2{print $4}');((available_kb>=4194304))||{ echo 'ERROR: at least 4 GiB free required';exit 1; }
-ROOT="$(cd "$(dirname "$0")/.."&&pwd)";APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/pi-arcade";BIN_DIR="$HOME/.local/bin";CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/pi-arcade";GAME_DIR="$HOME/Games/Arcade";SAVE_DIR="$HOME/Games/Arcade-Saves";REPORT="$CONFIG_DIR/install-report.txt"
+ROOT="$(cd "$(dirname "$0")/.."&&pwd)";APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/pi-arcade";BIN_DIR="$HOME/.local/bin";CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/pi-arcade";GAME_DIR="$HOME/Games/Arcade";PREPARED_GAME_DIR="$HOME/Arcade-Game-Library/Prepared-Games";SAVE_DIR="$HOME/Games/Arcade-Saves";REPORT="$CONFIG_DIR/install-report.txt"
 log "Host: $MODEL / $ARCH";run sudo apt-get update;run sudo apt-get install -y nodejs npm retroarch retroarch-assets joystick evtest curl ca-certificates unzip
 if ! $DRY_RUN;then
   NODE_MAJOR="$(node --version 2>/dev/null|sed -E 's/^v([0-9]+).*/\1/'||echo 0)"
@@ -32,7 +32,7 @@ apt_optional() {
     log "Optional package unavailable: $1"
   fi
 }
-for pkg in libretro-mesen libretro-snes9x libretro-mgba libretro-genesisplusgx libretro-pcsx-rearmed libretro-fbneo libretro-flycast libretro-mame libretro-mame2003-plus;do apt_optional "$pkg";done
+for pkg in libretro-mesen libretro-snes9x libretro-gambatte libretro-mgba libretro-melonds libretro-mupen64plus-next libretro-stella2014 libretro-genesisplusgx libretro-pcsx-rearmed libretro-prboom libretro-fbneo libretro-flycast libretro-mame libretro-mame2003-plus;do apt_optional "$pkg";done
 CORE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/retroarch/cores";run mkdir -p "$APP_DIR" "$BIN_DIR" "$CONFIG_DIR" "$GAME_DIR" "$SAVE_DIR" "$CORE_DIR" "$HOME/.config/labwc"
 core_exists() { [[ -f "$CORE_DIR/$1_libretro.so" || -f "/usr/lib/aarch64-linux-gnu/libretro/$1_libretro.so" || -f "/usr/lib/libretro/$1_libretro.so" ]]; }
 ensure_core(){
@@ -45,15 +45,17 @@ ensure_core(){
   sha256sum "$CORE_DIR/${core}_libretro.so">"$CORE_DIR/${core}_libretro.so.sha256"
   rm -f "$archive"
 }
-if $DRY_RUN;then log 'Would ensure official ARM64 Libretro core fallbacks';else for core in mesen snes9x mgba genesis_plus_gx pcsx_rearmed fbneo flycast mame2003_plus;do ensure_core "$core";done;fi
+if $DRY_RUN;then log 'Would ensure official ARM64 Libretro core fallbacks';else for core in mesen snes9x gambatte mgba melonds mupen64plus_next stella2014 genesis_plus_gx pcsx_rearmed prboom fbneo flycast mame2003_plus;do ensure_core "$core";done;fi
 run npm ci --prefix "$ROOT"
 run npm run verify:content --prefix "$ROOT"
 run npm run build --prefix "$ROOT";run npm run package:pi --prefix "$ROOT"
 APPIMAGE="$(find "$ROOT/dist" -maxdepth 1 -name '*arm64.AppImage' -print -quit 2>/dev/null||true)";if ! $DRY_RUN&&[[ -z "$APPIMAGE" ]];then echo 'ERROR: ARM64 AppImage was not created';exit 1;fi
 if ! $DRY_RUN;then install -m 0755 "$APPIMAGE" "$APP_DIR/pi-arcade.AppImage";install -m 0644 "$ROOT/content/void-lancer/void-lancer.nes" "$GAME_DIR/void-lancer.nes";install -m 0644 "$ROOT/content/void-lancer/LICENSE" "$GAME_DIR/VOID-LANCER-LICENSE";fi
 if [[ -n "${PI_ARCADE_MVCX_SOURCE:-}" ]];then if $DRY_RUN;then log "Would prepare user-supplied MVCX assets from $PI_ARCADE_MVCX_SOURCE";else bash "$ROOT/scripts/install-mvcx-pi.sh" "$PI_ARCADE_MVCX_SOURCE" "$GAME_DIR/Marvel vs Capcom X 3.0";fi;fi
+if [[ -n "${PI_ARCADE_SMW_SOURCE:-}" ]];then if $DRY_RUN;then log "Would build Super Mario War from $PI_ARCADE_SMW_SOURCE";else bash "$ROOT/scripts/install-super-mario-war-pi.sh" "$PI_ARCADE_SMW_SOURCE" "$GAME_DIR/Super Mario War";fi;fi
+if [[ -n "${PI_ARCADE_OPENTYRIAN_ARCHIVE:-}" ]];then if $DRY_RUN;then log "Would install OpenTyrian from $PI_ARCADE_OPENTYRIAN_ARCHIVE";else bash "$ROOT/scripts/install-opentyrian-pi.sh" "$PI_ARCADE_OPENTYRIAN_ARCHIVE" "$GAME_DIR/OpenTyrian";fi;fi
 LAUNCHER="$BIN_DIR/pi-arcade-launch";if ! $DRY_RUN;then
-  printf '%s\n' '#!/usr/bin/env bash' 'set -u' "export PI_ARCADE_GAME_DIR=\"$GAME_DIR\"" "while true; do \"$APP_DIR/pi-arcade.AppImage\" --ozone-platform-hint=auto; code=\$?; [[ \$code -eq 0 ]] && exit 0; logger -t pi-arcade \"launcher crashed with \$code; restarting\"; sleep 2; done" >"$LAUNCHER";chmod 0755 "$LAUNCHER"
+  printf '%s\n' '#!/usr/bin/env bash' 'set -u' "export PI_ARCADE_GAME_DIR=\"$PREPARED_GAME_DIR\"" "while true; do \"$APP_DIR/pi-arcade.AppImage\" --ozone-platform-hint=auto; code=\$?; [[ \$code -eq 0 ]] && exit 0; logger -t pi-arcade \"launcher crashed with \$code; restarting\"; sleep 2; done" >"$LAUNCHER";chmod 0755 "$LAUNCHER"
 fi
 if $ENABLE_AUTOSTART;then AUTOSTART="$HOME/.config/labwc/autostart";LINE="$LAUNCHER >>$CONFIG_DIR/launcher.log 2>&1 &";if $DRY_RUN;then log "Would add autostart: $LINE";else touch "$AUTOSTART";grep -Fqx "$LINE" "$AUTOSTART"||printf '\n%s\n' "$LINE">>"$AUTOSTART";fi;fi
 if ! $DRY_RUN;then "$APP_DIR/pi-arcade.AppImage" --version >/dev/null 2>&1||true;{ echo "installed_at=$(date -Is)";echo "model=$MODEL";echo "arch=$ARCH";echo "retroarch=$(retroarch --version 2>/dev/null|head -1||true)";echo "game_sha256=$(sha256sum "$GAME_DIR/void-lancer.nes"|awk '{print $1}')";echo 'hardware_test=pending';}>"$REPORT";fi

@@ -1,6 +1,6 @@
 export type VerificationState='not-tested'|'file-verified'|'launch-verified'|'input-verified'|'runtime-verified'|'hardware-tested'|'passed'|'failed'|'blocked';
 export type Action='confirm'|'back'|'start'|'coin'|'exit'|'up'|'down'|'left'|'right'|'favorite';
-export type Platform='Arcade'|'NES'|'SNES'|'Genesis'|'Sega CD'|'Neo Geo'|'PlayStation'|'GBA'|'PC'|'MUGEN';
+export type Platform='Arcade'|'Atari 2600'|'NES'|'SNES'|'Genesis'|'Sega CD'|'Neo Geo'|'PlayStation'|'Game Boy'|'Game Boy Color'|'GBA'|'Nintendo DS'|'Nintendo 64'|'PC'|'MUGEN';
 export type Genre='Fighting'|'Arcade Classics'|'Platform'|'Racing'|'Shooting'|'Puzzle'|'Sports'|'Action'|'Beat em up';
 export interface Binding{physical:string;action:string;retroPad?:string;button?:number;key?:string}
 export type PhysicalControl='UP'|'DOWN'|'LEFT'|'RIGHT'|'B1'|'B2'|'B3'|'B4'|'B5'|'B6'|'B7'|'B8'|'START'|'SELECT';

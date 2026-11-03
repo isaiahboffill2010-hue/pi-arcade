@@ -15,6 +15,9 @@
     "test:e2e": "npm run build && playwright test",
     "test:watch": "vitest",
     "verify:content": "node scripts/verify-content.mjs",
+    "library:inventory": "node scripts/library-workflow.mjs --inventory-only",
+    "library:expand": "node scripts/library-workflow.mjs",
+    "library:sync:pi": "powershell -ExecutionPolicy Bypass -File scripts/sync-pi-library.ps1",
     "prepare:mvcx:windows": "powershell -ExecutionPolicy Bypass -File scripts/prepare-mvcx-windows.ps1",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint . --max-warnings=0"

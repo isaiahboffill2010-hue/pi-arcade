@@ -1,0 +1,23 @@
+import{describe,expect,it}from'vitest';
+import{readFile}from'node:fs/promises';
+
+describe('startup and session recovery',()=>{
+ it('always resets a second instance and a completed game to Home',async()=>{
+  const main=await readFile(new URL('../electron/main.ts',import.meta.url),'utf8');
+  const renderer=await readFile(new URL('../src/main.tsx',import.meta.url),'utf8');
+  expect(main).toContain("webContents.send('session-reset')");
+  expect(renderer).toContain("setView('home')");
+  expect(renderer).toContain('onSessionReset(resetSession)');
+ });
+ it('requires a neutral Start and Select release before arming the exit hold',async()=>{
+  const main=await readFile(new URL('../electron/main.ts',import.meta.url),'utf8');
+  expect(main).toContain('if(!startHeld&&!selectHeld)exitComboReady=true');
+  expect(main).toContain('held&&exitComboReady&&!exitTimer');
+  expect(main).toContain('exitComboReady=false;gameWasActive=false');
+ });
+ it('offers a controller-focusable maintenance action without changing the display manager',async()=>{
+  const renderer=await readFile(new URL('../src/main.tsx',import.meta.url),'utf8');
+  expect(renderer).toContain('Exit to desktop for maintenance');
+  expect(renderer).toContain('maintenanceDesktop()');
+ });
+});

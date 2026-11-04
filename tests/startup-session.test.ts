@@ -8,6 +8,7 @@ describe('startup and session recovery',()=>{
   expect(main).toContain("webContents.send('session-reset')");
   expect(renderer).toContain("setView('home')");
   expect(renderer).toContain('onSessionReset(resetSession)');
+  expect(renderer).toContain('useLayoutEffect(()=>{window.scrollTo(0,0)},[])');
  });
  it('requires a neutral Start and Select release before arming the exit hold',async()=>{
   const main=await readFile(new URL('../electron/main.ts',import.meta.url),'utf8');

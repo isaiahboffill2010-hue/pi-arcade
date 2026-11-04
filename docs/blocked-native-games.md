@@ -19,3 +19,18 @@ Primary upstream compatibility evidence:
 
 - Ikemen GO documents a native `LinuxARM` build, but it requires a normal reusable game data tree: <https://github.com/ikemen-engine/Ikemen-GO/blob/develop/BUILDING.md>
 - NW.js publishes Linux ARM64 runtimes, while its application still requires a `package.json`/package payload: <https://github.com/nwjs/nw.js/blob/main/docs/For%20Users/Getting%20Started.md>
+
+## Follow-up Game Jolt package recovery
+
+On 2026-11-03, shortcut files added to `for codex` were resolved to their existing Game Jolt installation directories. The originals were left untouched and confidently matched files were copied under the external `Prepared-Games/Recovered-Native` directory.
+
+| Prepared package | Recovered structure | Windows result | Raspberry Pi status |
+| --- | --- | --- | --- |
+| FazKarts | `FazKarts.exe`, `UnityPlayer.dll`, `FazKarts_Data`, Mono runtime and plugins | Opens a `FazKarts` Unity window, but did not become responsive during the bounded loading test | Windows x64 Unity player only; no Linux ARM64 player supplied |
+| RE KART 0.9 | `RE KART 0.9.exe`, `UnityPlayer.dll`, `RE KART 0.9_Data`, Mono runtime and plugins | Responsive `RE KART 0.9` window | Windows x64 Unity player only; no Linux ARM64 player supplied |
+| FNAF 1 Remake | `FNAF 1 REMAKE.exe`, 639 MB `.dat`, and required Clickteam `Modules` | Still exits immediately | Windows Clickteam package; no ARM64 runtime or source supplied |
+| LiminalPlace / The Backrooms Realism | Game Jolt launcher plus complete Unreal `data/Windows` tree, shipping executable, PAK/UCAS/UTOC and prerequisite files | Responsive `LiminalPlace-Win64-Shipping` process and `LiminalPlace` window | Windows x64 Unreal package only; no Linux ARM64 build supplied |
+| Sonic Time Twisted | Executable, `data.win`, audio, controller database, translations and DirectX library | Responsive `Sonic Time Twisted` window | Windows x86 GameMaker build; no native ARM64 runner supplied |
+| Clickertale | `nw.exe`, `package.nw`, NW/Chromium DLLs, resources and locale | Responsive `Clickertale` NW.js window | Application assets are recovered, but cabinet suitability and compatibility with a current ARM64 NW.js runtime are unverified |
+
+The Bendy shortcut contains only `Promo.jpg`; the FNAF Ultimate Edition shortcut contains only a manifest; and the `OSF` shortcut contains only `Sonic.pck` without a proven matching executable. Those files were not associated or copied by guesswork.

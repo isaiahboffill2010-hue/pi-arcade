@@ -15,6 +15,12 @@ describe('startup and session recovery',()=>{
   expect(main).toContain('held&&exitComboReady&&!exitTimer');
   expect(main).toContain('exitComboReady=false;gameWasActive=false');
  });
+ it('does not create or map the fullscreen exit overlay during startup',async()=>{
+  const main=await readFile(new URL('../electron/main.ts',import.meta.url),'utf8');
+  const createWindow=main.slice(main.indexOf('function createWindow()'),main.indexOf('app.whenReady()'));
+  expect(createWindow).not.toContain('exitOverlay=new BrowserWindow');
+  expect(main).toContain("function openOverlay(){if(overlayOpen||!hasActiveGame())return");
+ });
  it('offers a controller-focusable maintenance action without changing the display manager',async()=>{
   const renderer=await readFile(new URL('../src/main.tsx',import.meta.url),'utf8');
   expect(renderer).toContain('Exit to desktop for maintenance');

@@ -7,6 +7,6 @@ export class StateStore{private file:string;private backup:string;constructor(pr
  async update(fn:(s:AppState)=>void){const state=await this.load();fn(state);return this.save(state)}
  settings(v:Settings){return this.update(s=>{s.settings=v})} controller(v:ControllerConfig){return this.update(s=>{s.settings.controller=v})}
  favorite(id:string){return this.update(s=>{const g=s.games.find(x=>x.id===id);if(g)g.favorite=!g.favorite})}
- results(results:TestResult[]){return this.update(s=>{s.testResults=[...results,...s.testResults].slice(0,1000);for(const r of results){const g=s.games.find(x=>x.id===r.gameId);if(g&&['failed','blocked','runtime-verified','launch-verified','file-verified'].includes(r.state))g.verification=r.state}})}
+ results(results:TestResult[]){return this.update(s=>{s.testResults=[...results,...s.testResults].slice(0,1000);for(const r of results){const g=s.games.find(x=>x.id===r.gameId);if(g&&['failed','blocked','runtime-verified','launch-verified','file-verified'].includes(r.state)){g.verification=r.state;if(['failed','blocked'].includes(r.state)&&r.stage==='launch-runtime-exit')g.installed=false}}})}
  played(id:string){return this.update(s=>{const g=s.games.find(x=>x.id===id);if(g){g.lastPlayed=new Date().toISOString();g.playCount=(g.playCount??0)+1}s.recentIds=[id,...s.recentIds.filter(x=>x!==id)].slice(0,20)})}
  dataRoot(){return this.root}}

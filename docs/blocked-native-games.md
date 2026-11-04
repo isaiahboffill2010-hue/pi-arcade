@@ -31,6 +31,18 @@ On 2026-11-03, shortcut files added to `for codex` were resolved to their existi
 | FNAF 1 Remake | `FNAF 1 REMAKE.exe`, 639 MB `.dat`, and required Clickteam `Modules` | Still exits immediately | Windows Clickteam package; no ARM64 runtime or source supplied |
 | LiminalPlace / The Backrooms Realism | Game Jolt launcher plus complete Unreal `data/Windows` tree, shipping executable, PAK/UCAS/UTOC and prerequisite files | Responsive `LiminalPlace-Win64-Shipping` process and `LiminalPlace` window | Windows x64 Unreal package only; no Linux ARM64 build supplied |
 | Sonic Time Twisted | Executable, `data.win`, audio, controller database, translations and DirectX library | Responsive `Sonic Time Twisted` window | Windows x86 GameMaker build; no native ARM64 runner supplied |
-| Clickertale | `nw.exe`, `package.nw`, NW/Chromium DLLs, resources and locale | Responsive `Clickertale` NW.js window | Application assets are recovered, but cabinet suitability and compatibility with a current ARM64 NW.js runtime are unverified |
+| Clickertale | `nw.exe`, `package.nw`, NW/Chromium DLLs, resources and locale | Responsive `Clickertale` NW.js window | Runs fullscreen on Raspberry Pi 5 with the official NW.js 0.119.2 Linux ARM64 runtime, but its Clickteam HTML5 application has no gamepad handling and remains pointer-driven; it is therefore not Ready-to-Play |
 
 The Bendy shortcut contains only `Promo.jpg`; the FNAF Ultimate Edition shortcut contains only a manifest; and the `OSF` shortcut contains only `Sonic.pck` without a proven matching executable. Those files were not associated or copied by guesswork.
+
+## Raspberry Pi deployment attempt
+
+On 2026-11-03 the six recovered packages were reassessed directly on the Raspberry Pi 5. The existing 43 Ready-to-Play games were preserved.
+
+- Clickertale's `package.nw` contains a complete HTML5 application with no native Windows modules. The official NW.js 0.119.2 Linux ARM64 runtime was installed alongside the external package. The real application remained alive, rendered its title screen at 1920x1080 under Wayland, and terminated cleanly during the bounded test. Static inspection of `c2runtime.js` found mouse/touch handling but no Gamepad API support. Since the cabinet has no mouse and a verified controller-to-pointer adapter is not yet present, no native marker or catalog-ready state was created.
+- FazKarts and RE KART are complete Windows Unity builds. Their `_Data` directories do not substitute for an ARM64 Linux player; an authorized Unity project or developer Linux ARM64 export is required.
+- LiminalPlace is cooked specifically for Windows and contains a Win64 shipping executable plus Windows PAK/UCAS/UTOC data. A Linux ARM64 Unreal executable cannot consume this package as an uncooked project.
+- FNAF 1 Remake is a Windows Clickteam Fusion application and still fails on Windows. No source project or supported ARM64 runtime was supplied.
+- Sonic Time Twisted is a Windows GameMaker package. Its available Linux release is x86, not ARM64, and no supported ARM64 runner/source export was supplied.
+
+The Pi Ready-to-Play count remains 43. Clickertale is the only recovered package whose real game content was successfully executed on ARM64, but it is intentionally excluded until cabinet-only menu and gameplay control can be verified.

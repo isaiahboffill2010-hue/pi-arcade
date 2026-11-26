@@ -200,6 +200,8 @@ export interface NativeControllerState {
   backend: "linux-js" | "none";
 }
 export interface PhoneStatus { url:string;qr:string;serverReady:boolean;virtualPads:boolean;players:{slot:number;connected:boolean}[];game?:{title:string;maxPlayers:number} }
+export interface WifiNetwork{ssid:string;signal:number;security:string;active:boolean;saved:boolean}
+export interface NetworkStatus{connected:boolean;ssid:string;signal:number;ipv4:string;hostnameUrl:string;controllerUrl:string;device:string;activeConnection:string;networks:WifiNetwork[];saved:string[];hotspot?:{ssid:string;password:string}}
 export interface ArcadeApi {
   loadState: () => Promise<AppState>;
   saveSettings: (settings: Settings) => Promise<AppState>;
@@ -217,6 +219,12 @@ export interface ArcadeApi {
   controllerState: () => Promise<NativeControllerState>;
   phoneStatus: () => Promise<PhoneStatus>;
   onPhoneInput: (callback:(event:{slot:number;control:string;pressed:boolean})=>void)=>()=>void;
+  networkStatus:(scan?:boolean)=>Promise<NetworkStatus>;
+  networkPairStart:()=>Promise<{code:string;expiresAt:number}>;
+  networkAuthorize:(code:string)=>Promise<boolean>;
+  networkConnect:(ssid:string,password:string)=>Promise<NetworkStatus>;
+  networkDisconnect:()=>Promise<NetworkStatus>;
+  networkHotspot:()=>Promise<NetworkStatus>;
   onControllerState: (
     callback: (state: NativeControllerState) => void,
   ) => () => void;

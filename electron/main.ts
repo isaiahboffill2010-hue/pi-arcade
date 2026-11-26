@@ -23,6 +23,7 @@ import type {
 import { LinuxJoystickAdapter } from "./services/linux-input.js";
 import { PhoneControllerServer } from "./services/phone-server.js";
 import { VirtualPads } from "./services/virtual-pads.js";
+import { NetworkManagerService } from "./services/network.js";
 if (!app.requestSingleInstanceLock()) app.quit();
 app.on("second-instance", () => {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -38,6 +39,7 @@ app.on("second-instance", () => {
 const here = path.dirname(fileURLToPath(import.meta.url));
 const phoneServer = new PhoneControllerServer();
 const virtualPads = new VirtualPads();
+const networkManager=new NetworkManagerService();let networkCode="",networkCodeExpires=0,networkUnlockedUntil=0;
 const captainHeld=new Set<string>();let captainExitTimer:NodeJS.Timeout|undefined;
 let mainWindow: electron.BrowserWindow,
   exitOverlay: electron.BrowserWindow | undefined;
@@ -222,6 +224,9 @@ app.whenReady().then(async () => {
   store = new StateStore(app.getPath("userData"));
   await virtualPads.start();
   await phoneServer.start();
+  await networkManager.start();
+  networkManager.on("changed",()=>{void phoneServer.refreshAddress().then(changed=>{if(changed)phoneServer.disconnectClients();if(mainWindow&&!mainWindow.isDestroyed())mainWindow.webContents.send("network:changed")})});
+  const offlineSetup=setTimeout(()=>{void networkManager.snapshot().then(async state=>{if(!state.connected){const next=await networkManager.startHotspot();await phoneServer.refreshAddress();if(mainWindow&&!mainWindow.isDestroyed())mainWindow.webContents.send("network:changed",next)}}).catch(()=>{})},45000);offlineSetup.unref();
   phoneServer.onInput((event) => {
     virtualPads.send(event.slot, event.control, event.pressed);
     if(event.slot===1){if(event.pressed)captainHeld.add(event.control);else captainHeld.delete(event.control);const exitHeld=captainHeld.has("start")&&captainHeld.has("select");if(exitHeld&&hasActiveGame()&&!captainExitTimer){captainExitTimer=setTimeout(()=>{captainExitTimer=undefined;if(captainHeld.has("start")&&captainHeld.has("select"))stopActive()},3000);captainExitTimer.unref()}else if(!exitHeld&&captainExitTimer){clearTimeout(captainExitTimer);captainExitTimer=undefined}}
@@ -261,6 +266,13 @@ app.whenReady().then(async () => {
     qr: phoneServer.qr,
     virtualPads: virtualPads.isReady(),
   }));
+  ipcMain.handle("network:status",(_e,scan=false)=>networkManager.snapshot(Boolean(scan)));
+  ipcMain.handle("network:pair-start",()=>{networkCode=String(Math.floor(100000+Math.random()*900000));networkCodeExpires=Date.now()+120000;return{code:networkCode,expiresAt:networkCodeExpires}});
+  ipcMain.handle("network:authorize",(_e,code:string)=>{const ok=Date.now()<networkCodeExpires&&code===networkCode;if(ok){networkUnlockedUntil=Date.now()+300000;networkCode=""}return ok});
+  const requireNetworkOwner=()=>{if(Date.now()>networkUnlockedUntil)throw new Error("Owner pairing expired. Pair again on the TV.")};
+  ipcMain.handle("network:connect",async(_e,ssid:string,password:string)=>{requireNetworkOwner();phoneServer.disconnectClients();const value=await networkManager.connect(ssid,password);await phoneServer.refreshAddress();return value});
+  ipcMain.handle("network:disconnect",async()=>{requireNetworkOwner();phoneServer.disconnectClients();const value=await networkManager.disconnect();await phoneServer.refreshAddress();return value});
+  ipcMain.handle("network:hotspot",async()=>{requireNetworkOwner();phoneServer.disconnectClients();const value=await networkManager.startHotspot();await phoneServer.refreshAddress();return value});
   ipcMain.handle("controller:state", () => controller.snapshot());
   ipcMain.handle("state:load", () => store.load());
   ipcMain.handle("settings:save", (_e, v: Settings) => store.settings(v));
@@ -322,6 +334,7 @@ app.whenReady().then(async () => {
 app.on("before-quit", () => {
   controller.stop();
   virtualPads.stop();
+  networkManager.stop();
   void phoneServer.stop();
   stopActive();
 });

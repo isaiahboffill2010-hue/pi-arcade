@@ -15,6 +15,12 @@ contextBridge.exposeInMainWorld("arcade", {
   saveController: (v) => ipcRenderer.invoke("controller:save", v),
   controllerState: () => ipcRenderer.invoke("controller:state"),
   phoneStatus: () => ipcRenderer.invoke("phone:status"),
+  networkStatus: (scan) => ipcRenderer.invoke("network:status",scan),
+  networkPairStart: () => ipcRenderer.invoke("network:pair-start"),
+  networkAuthorize: (code) => ipcRenderer.invoke("network:authorize",code),
+  networkConnect: (ssid,password) => ipcRenderer.invoke("network:connect",ssid,password),
+  networkDisconnect: () => ipcRenderer.invoke("network:disconnect"),
+  networkHotspot: () => ipcRenderer.invoke("network:hotspot"),
   onPhoneInput: (callback) => {
     const fn = (_e, state) => callback(state);
     ipcRenderer.on("phone:input", fn);

@@ -1,7 +1,7 @@
 import { createServer, type Server } from "node:http";
-import { networkInterfaces } from "node:os";
 import { WebSocketServer, type WebSocket } from "ws";
 import QRCode from "qrcode";
+import { controllerAddress } from "./network.js";
 import {
   PhoneSessions,
   phonePlayerLimit,
@@ -56,10 +56,11 @@ export class PhoneControllerServer {
       this.server!.once("error", reject);
       this.server!.listen(this.port, "0.0.0.0", resolve);
     });
-    this.url = `http://${lanAddress()}:${this.port}`;
-    this.qr = await QRCode.toDataURL(this.url, { margin: 1, width: 280 });
+    await this.refreshAddress();
     return this.status();
   }
+  async refreshAddress(){const next=`http://${await controllerAddress()}:${this.port}`;if(next===this.url&&this.qr)return false;this.url=next;this.qr=await QRCode.toDataURL(this.url,{margin:1,width:280});this.broadcast();return true}
+  disconnectClients(){for(const[ws,token]of this.sockets){const client=this.sessions.get(token);if(client){for(const control of client.held)for(const fn of this.listeners)fn({slot:client.slot,control,pressed:false});client.held.clear()}ws.close(1012,"Network changed")}}
   private connected(ws: WebSocket) {
     let token = "";
     let count = 0,
@@ -164,16 +165,6 @@ const controls = new Set<PhoneControl>([
 const send = (ws: WebSocket, v: unknown) => {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(v));
 };
-function lanAddress() {
-  for (const list of Object.values(networkInterfaces()))
-    for (const x of list ?? [])
-      if (x.family === "IPv4" && !x.internal && x.address.startsWith("10."))
-        return x.address;
-  for (const list of Object.values(networkInterfaces()))
-    for (const x of list ?? [])
-      if (x.family === "IPv4" && !x.internal) return x.address;
-  return "127.0.0.1";
-}
 function controllerLayout(platform:string){if(["NES","Game Boy","Game Boy Color","GBA"].includes(platform))return"two";if(platform==="Genesis")return"six";if(platform==="PlayStation")return"playstation";if(platform==="Nintendo 64")return"n64";return"four"}
 export function controllerPage() {
   return `<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name=apple-mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-status-bar-style content=black-translucent><meta name=theme-color content=#050712><title>Pi Arcade Controller</title><style>

@@ -118,7 +118,7 @@ export function buildRetroArgs(
     filePath,
   ];
 }
-function inputLines(game: Game, settings: Settings, phoneIndexes:number[] = []) {
+function inputLines(game: Game, settings: Settings, phoneIndexes:(number|undefined)[] = []) {
   const profile = profiles.find((p) => p.id === game.profileId);
   const physical: Record<string, unknown> =
     settings.controller?.physicalMapping ?? {};
@@ -172,11 +172,12 @@ function inputLines(game: Game, settings: Settings, phoneIndexes:number[] = []) 
   }
   for(let player=1;player<=4;player++){
     const index=phoneIndexes[player-1];if(index===undefined)continue;
-    lines.push(`input_player${player}_joypad_index = "${index}"`,`input_player${player}_up_axis = "-1"`,`input_player${player}_down_axis = "+1"`,`input_player${player}_left_axis = "-0"`,`input_player${player}_right_axis = "+0"`,`input_player${player}_a_btn = "1"`,`input_player${player}_b_btn = "0"`,`input_player${player}_x_btn = "3"`,`input_player${player}_y_btn = "2"`,`input_player${player}_l_btn = "4"`,`input_player${player}_r_btn = "5"`,`input_player${player}_select_btn = "6"`,`input_player${player}_start_btn = "7"`);
+    const product=(0x5041+player).toString(16).padStart(4,"0");
+    lines.push(`input_player${player}_joypad_index = "${index}"`,`input_device_reservation_type_p${player} = "2"`,`input_device_reserved_device_p${player} = "1209:${product} Pi Arcade Phone P${player}"`,`input_libretro_device_p${player} = "1"`,`input_player${player}_up_axis = "-1"`,`input_player${player}_down_axis = "+1"`,`input_player${player}_left_axis = "-0"`,`input_player${player}_right_axis = "+0"`,`input_player${player}_a_btn = "1"`,`input_player${player}_b_btn = "0"`,`input_player${player}_x_btn = "3"`,`input_player${player}_y_btn = "2"`,`input_player${player}_l_btn = "4"`,`input_player${player}_r_btn = "5"`,`input_player${player}_select_btn = "6"`,`input_player${player}_start_btn = "7"`);
   }
   return lines;
 }
-async function phoneJoypadIndexes(){if(process.platform!=="linux")return[];try{const names=await readdir("/sys/class/input");const found:Record<number,number>={};for(const name of names.filter(n=>/^js\d+$/.test(n))){const label=(await readFile(`/sys/class/input/${name}/device/name`,"utf8")).trim();const match=label.match(/^Pi Arcade Phone P([1-4])$/);if(match)found[Number(match[1])]=Number(name.slice(2))}return[1,2,3,4].map(n=>found[n]).filter((n):n is number=>n!==undefined)}catch{return[]}}
+async function phoneJoypadIndexes(){if(process.platform!=="linux")return[];try{const names=await readdir("/sys/class/input");const found:Record<number,number>={};for(const name of names.filter(n=>/^js\d+$/.test(n))){const label=(await readFile(`/sys/class/input/${name}/device/name`,"utf8")).trim();const match=label.match(/^Pi Arcade Phone P([1-4])$/);if(match)found[Number(match[1])]=Number(name.slice(2))}return[1,2,3,4].map(n=>found[n])}catch{return[]}}
 export async function retroArchCommand(
   game: Game,
   settings: Settings,

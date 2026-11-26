@@ -158,7 +158,7 @@ export class NetworkManagerService extends EventEmitter {
           active: a === "*",
           saved: saved.includes(n),
         };
-        if (!map.has(n) || map.get(n)!.signal < item.signal) map.set(n, item);
+        const existing=map.get(n);if(!existing||item.active||(!existing.active&&existing.signal<item.signal))map.set(n,item);
       }
       networks = [...map.values()].sort(
         (a, b) => Number(b.active) - Number(a.active) || b.signal - a.signal,

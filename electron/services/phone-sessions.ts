@@ -14,4 +14,4 @@ export class PhoneSessions{
  sweep(now=Date.now()){for(const c of this.clients.values())if(!c.connected&&c.expiresAt<=now)this.release(c.token)}
  snapshot(){return[...this.clients.values()].map(c=>({slot:c.slot,connected:c.connected})).sort((a,b)=>a.slot-b.slot)}
 }
-export const phonePlayerLimit=(game?:{id:string;players?:number;platform?:string})=>{if(!game)return 4;if(game.platform==='Nintendo 64')return 1;const verified:Record<string,number>={'genesis:street-fighter-ii-special-champion-edition':2,'snes:nba-jam':2,'snes:super-bomberman-5':2,'snes:super-mario-kart':2};return verified[game.id]??1};
+export const phonePlayerLimit=(game?:{id:string;players?:number;platform?:string})=>{if(!game)return 4;if(game.platform==='Nintendo 64')return 1;const verified:Record<string,number>={'genesis:street-fighter-ii-special-champion-edition':2,'playstation:marvel-vs-capcom':2,'snes:nba-jam':2,'snes:super-bomberman-5':2,'snes:super-mario-kart':2};return verified[game.id]??1};

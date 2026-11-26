@@ -78,6 +78,7 @@ function validSsid(ssid: string) {
   if (!ssid || bytes > 32 || /[\0\r\n]/.test(ssid))
     throw new Error("Invalid Wi-Fi network name");
 }
+export function friendlyNetworkError(error:unknown,restored:boolean){const raw=error instanceof Error?error.message:String(error),text=raw.toLowerCase();const reason=text.includes("secrets were required")||text.includes("password")||text.includes("802-11-wireless-security")?"The Wi-Fi password was rejected.":text.includes("no network")||text.includes("not found")?"That Wi-Fi network is no longer available. Rescan and try again.":text.includes("timed out")||text.includes("timeout")?"The connection timed out. Move closer to the router and retry.":text.includes("not compatible")||text.includes("unsupported")?"This network uses an unsupported authentication mode.":text.includes("ip")||text.includes("dhcp")?"Connected to Wi-Fi, but the router did not assign an IP address.":"NetworkManager could not activate this connection.";return`${reason} ${restored?"The previous Wi-Fi connection was restored.":"The previous Wi-Fi connection could not be restored; choose another network or start the setup hotspot."}`}
 export class NetworkManagerService extends EventEmitter {
   private monitor?: ReturnType<typeof import("node:child_process").spawn>;
   private hotspot?: { ssid: string; password: string };
@@ -188,9 +189,7 @@ export class NetworkManagerService extends EventEmitter {
     if (password.length > 128 || /[\0\r\n]/.test(password))
       throw new Error("Invalid Wi-Fi password");
     const before = await this.snapshot();
-    const runtime =
-      process.env.XDG_RUNTIME_DIR ??
-      path.join(os.tmpdir(), `pi-arcade-${process.getuid?.() ?? "user"}`);
+    const runtime = process.env.XDG_RUNTIME_DIR ?? os.tmpdir();
     const dir = await mkdtemp(path.join(runtime, "wifi-"));
     const secrets = path.join(dir, "secrets");
     try {
@@ -222,24 +221,23 @@ export class NetworkManagerService extends EventEmitter {
             before.device,
           ];
       await exec("nmcli", args, { timeout: 40000, maxBuffer: 1024 * 1024 });
+      let assigned=false;for(let attempt=0;attempt<15;attempt++){const probe=await exec("nmcli",["-t","-f","IP4.ADDRESS","device","show",before.device],{timeout:3000});if(/\d+\.\d+\.\d+\.\d+\//.test(probe.stdout)){assigned=true;break}await new Promise(resolve=>setTimeout(resolve,1000))}if(!assigned)throw new Error("DHCP IP assignment timed out");
       this.hotspot = undefined;
       this.emit("changed");
       return await this.snapshot(true);
     } catch (error) {
-      if (before.connected && before.activeConnection)
+      let restored=false;if (before.connected && before.activeConnection)
         try {
           await exec(
             "nmcli",
             ["--wait", "15", "connection", "up", before.activeConnection],
             { timeout: 20000 },
           );
+          restored=true;
         } catch {
           /* retain original error */
         }
-      throw new Error(
-        error instanceof Error ? error.message : "Wi-Fi connection failed",
-        {cause:error},
-      );
+      throw new Error(friendlyNetworkError(error,restored),{cause:error});
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

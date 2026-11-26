@@ -336,14 +336,29 @@ function App() {
       if (["up", "down", "left", "right"].includes(event.control))
         moveFocus(event.control as "up" | "down" | "left" | "right");
       else if (event.control === "a")
-        (document.activeElement instanceof HTMLElement ? document.activeElement : focusables()[0])?.click();
+        (document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : focusables()[0]
+        )?.click();
       else if (event.control === "start")
-        (document.querySelector<HTMLElement>(".cta:not(:disabled)") ?? focusables()[0])?.click();
-      else if (event.control === "b" || event.control === "select") setView("home");
+        (
+          document.querySelector<HTMLElement>(".cta:not(:disabled)") ??
+          focusables()[0]
+        )?.click();
+      else if (event.control === "b" || event.control === "select")
+        setView("home");
     });
-    return () => { clearInterval(timer); unsubscribe?.(); };
+    return () => {
+      clearInterval(timer);
+      unsubscribe?.();
+    };
   }, [gameRunning]);
-  React.useEffect(()=>{const refresh=()=>window.arcade?.networkStatus(false).then(setNetwork);void refresh();const timer=setInterval(refresh,5000);return()=>clearInterval(timer)},[]);
+  React.useEffect(() => {
+    const refresh = () => window.arcade?.networkStatus(false).then(setNetwork);
+    void refresh();
+    const timer = setInterval(refresh, 5000);
+    return () => clearInterval(timer);
+  }, []);
   const go = (v: View) => {
     setView(v);
     setNotice("");
@@ -408,7 +423,15 @@ function App() {
       <Header view={view} go={go} runDiagnostics={runDiagnostics} />
       {notice && <div className="notice">{notice}</div>}
       {gameRunning && selected && <GameTransition game={selected} />}
-      {view === "home" && <Home state={state} open={open} go={go} phone={phone} network={network} />}{" "}
+      {view === "home" && (
+        <Home
+          state={state}
+          open={open}
+          go={go}
+          phone={phone}
+          network={network}
+        />
+      )}{" "}
       {view === "library" && (
         <Library
           title="Game Library"
@@ -484,7 +507,9 @@ function App() {
           </section>
         </>
       )}
-      {view === "wifi"&&<WifiNetworkView value={network} update={setNetwork}/>}
+      {view === "wifi" && (
+        <WifiNetworkView value={network} update={setNetwork} home={()=>setView("home")} />
+      )}
       {view === "controller" && (
         <ControllerTest
           pad={pad}
@@ -567,7 +592,7 @@ function Home({
   open: (g: Game) => void;
   go: (v: View) => void;
   phone?: PhoneStatus;
-  network?:NetworkStatus;
+  network?: NetworkStatus;
 }) {
   const installed = state.games.filter((g) => g.installed),
     recent = state.recentIds
@@ -583,7 +608,17 @@ function Home({
     ) : null;
   return (
     <>
-      {network?.hotspot&&<section className="panel"><p className="eyebrow">OFFLINE SETUP NETWORK</p><h2>{network.hotspot.ssid}</h2><p>Connect an owner's phone using password <strong>{network.hotspot.password}</strong>, then open <strong>{network.controllerUrl}</strong>.</p></section>}
+      {network?.hotspot && (
+        <section className="panel">
+          <p className="eyebrow">OFFLINE SETUP NETWORK</p>
+          <h2>{network.hotspot.ssid}</h2>
+          <p>
+            Connect an owner's phone using password{" "}
+            <strong>{network.hotspot.password}</strong>, then open{" "}
+            <strong>{network.controllerUrl}</strong>.
+          </p>
+        </section>
+      )}
       {featured && (
         <section className="featured">
           <Artwork game={featured} wide />
@@ -605,8 +640,33 @@ function Home({
         <span>•</span> CONTROLLER READY
       </div>
       <section className="phone-lobby">
-        <div><p className="eyebrow">WIRELESS CONTROLLERS</p><h2>Scan to join</h2><p>Connect phones to this Wi-Fi, then scan. Player 1 is the captain and controls the launcher.</p><code>{phone?.url ?? "Starting controller server…"}</code><div className="phone-slots">{[1,2,3,4].map(slot=>{const ready=phone?.players.some(p=>p.slot===slot&&p.connected);return <span key={slot} className={ready?"joined":""}>P{slot} · {ready?"READY":"OPEN"}</span>})}</div>{!phone?.virtualPads&&<p className="hint">Lobby online; waiting for Linux virtual-gamepad permission.</p>}</div>
-        {phone?.qr&&<img src={phone.qr} alt="QR code for phone controller"/>}
+        <div>
+          <p className="eyebrow">WIRELESS CONTROLLERS</p>
+          <h2>Scan to join</h2>
+          <p>
+            Connect phones to this Wi-Fi, then scan. Player 1 is the captain and
+            controls the launcher.
+          </p>
+          <code>{phone?.url ?? "Starting controller server…"}</code>
+          <div className="phone-slots">
+            {[1, 2, 3, 4].map((slot) => {
+              const ready = phone?.players.some(
+                (p) => p.slot === slot && p.connected,
+              );
+              return (
+                <span key={slot} className={ready ? "joined" : ""}>
+                  P{slot} · {ready ? "READY" : "OPEN"}
+                </span>
+              );
+            })}
+          </div>
+          {!phone?.virtualPads && (
+            <p className="hint">
+              Lobby online; waiting for Linux virtual-gamepad permission.
+            </p>
+          )}
+        </div>
+        {phone?.qr && <img src={phone.qr} alt="QR code for phone controller" />}
       </section>
       {shelf("Continue Playing", recent.slice(0, 8))}
       {shelf("Ready to Play", installed)}
@@ -949,7 +1009,14 @@ function SettingsView({
             Controller test & calibration
           </button>
         </div>
-        <div className="panel"><h3>Wi-Fi & Network</h3><p>Connect at a new house and refresh the phone-controller QR code automatically.</p><button onClick={()=>go("wifi")}>Open Wi-Fi settings</button></div>
+        <div className="panel">
+          <h3>Wi-Fi & Network</h3>
+          <p>
+            Connect at a new house and refresh the phone-controller QR code
+            automatically.
+          </p>
+          <button onClick={() => go("wifi")}>Open Wi-Fi settings</button>
+        </div>
         <div className="panel">
           <h3>Backup</h3>
           <button onClick={exportData}>Export settings and library</button>
@@ -959,7 +1026,233 @@ function SettingsView({
     </section>
   );
 }
-function WifiNetworkView({value,update}:{value?:NetworkStatus;update:(value:NetworkStatus)=>void}){const[selected,setSelected]=React.useState("");const[password,setPassword]=React.useState("");const[show,setShow]=React.useState(false);const[shift,setShift]=React.useState(false);const[pairCode,setPairCode]=React.useState("");const[enteredCode,setEnteredCode]=React.useState("");const[unlocked,setUnlocked]=React.useState(false);const[busy,setBusy]=React.useState(false);const[message,setMessage]=React.useState("");const refresh=async(scan=true)=>{setBusy(true);try{update(await window.arcade!.networkStatus(scan));setMessage("")}catch(e){setMessage(e instanceof Error?e.message:String(e))}finally{setBusy(false)}};const run=async(fn:()=>Promise<NetworkStatus>)=>{setBusy(true);setMessage("Connected phones will temporarily disconnect while NetworkManager applies this change…");try{const next=await fn();update(next);setSelected("");setPassword("");setMessage(next.connected?`Connected to ${next.ssid}. New controller address: ${next.controllerUrl}`:"Network change complete.")}catch(e){setMessage(`Connection failed. The previous known network was restored when possible. ${e instanceof Error?e.message:String(e)}`)}finally{setBusy(false)}};const keys=(shift?'ABCDEFGHIJKLMNOPQRSTUVWXYZ':'abcdefghijklmnopqrstuvwxyz').split('').concat('1234567890'.split(''),'!@#$%^&*()-_=+.'.split(''));return <section><p className="eyebrow">HOST MAINTENANCE · NETWORKMANAGER</p><h2>Wi-Fi & Network</h2><div className={`connection ${value?.connected?'ok':'bad'}`}><b>{value?.connected?`Connected · ${value.ssid}`:'Offline'}</b><span> Signal {value?.signal??0}% · IPv4 {value?.ipv4??'Unavailable'}</span></div><div className="panel"><h3>Phone controllers</h3><code>{value?.controllerUrl}</code><p>Hostname fallback: <strong>{value?.hostnameUrl}</strong></p><p className="hint">Phones must be on a mutually reachable LAN. Guest-network client isolation or firewall rules can block controllers even on the same SSID.</p></div>{!unlocked?<div className="panel"><h3>Owner pairing required</h3><p>Network changes are not authorized merely because a phone is P1. Start a two-minute local-TV pairing and enter the displayed code.</p>{pairCode?<><div className="pair-code">{pairCode}</div><input value={enteredCode} readOnly type="password" aria-label="Owner pairing code"/><div className="keyboard digits">{'1234567890'.split('').map(k=><button key={k} onClick={()=>setEnteredCode(v=>(v+k).slice(0,6))}>{k}</button>)}<button onClick={()=>setEnteredCode(v=>v.slice(0,-1))}>⌫</button></div><button className="cta" onClick={async()=>{const ok=await window.arcade!.networkAuthorize(enteredCode);setUnlocked(ok);setMessage(ok?'Owner controls unlocked for five minutes.':'Incorrect or expired pairing code.')}}>Unlock network controls</button></>:<button onClick={async()=>{const pair=await window.arcade!.networkPairStart();setPairCode(pair.code);setEnteredCode("")}}>Begin owner pairing</button>}</div>:<><div className="actions"><button disabled={busy} onClick={()=>void refresh(true)}>{busy?'Scanning…':'Rescan networks'}</button>{value?.connected?<button disabled={busy} onClick={()=>void run(()=>window.arcade!.networkDisconnect())}>Disconnect</button>:<button disabled={busy} onClick={()=>void run(()=>window.arcade!.networkHotspot())}>Start protected setup hotspot</button>}</div><section className="wifi-list">{value?.networks.map(n=><button key={n.ssid} className={n.active?'active':''} onClick={()=>{setSelected(n.ssid);setPassword("")}}><strong>{n.ssid}</strong><span>{n.active?'CONNECTED · ':''}{n.signal}% · {n.security==='--'?'Open':`🔒 ${n.security}`}{n.saved?' · SAVED':''}</span></button>)}</section>{selected&&<div className="panel"><h3>Connect to {selected}</h3><p className="hint">Existing phone controllers and SSH may disconnect. Pi Arcade will release held inputs and attempt to restore the previous network if authentication fails.</p><input value={password} readOnly type={show?'text':'password'} aria-label="Wi-Fi password" placeholder="Wi-Fi password"/><label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/> Show password</label><div className="keyboard wifi-keys">{keys.map(k=><button key={k} onClick={()=>setPassword(v=>v+k)}>{k}</button>)}<button onClick={()=>setShift(v=>!v)}>{shift?'lowercase':'UPPERCASE'}</button><button onClick={()=>setPassword(v=>v.slice(0,-1))}>⌫</button><button onClick={()=>setPassword('')}>CLEAR</button></div><button className="cta" disabled={busy} onClick={()=>void run(()=>window.arcade!.networkConnect(selected,password))}>Connect and save securely</button></div>}<div className="panel"><h3>Saved networks</h3><p>{value?.saved.join(' · ')||'None'}</p></div></>}{message&&<div className="notice-inline">{message}</div>}<div className="actions"><button onClick={()=>void refresh(false)}>Refresh status</button></div></section>}
+function WifiNetworkView({
+  value,
+  update,
+  home,
+}: {
+  value?: NetworkStatus;
+  update: (value: NetworkStatus) => void;
+  home:()=>void;
+}) {
+  const [selected, setSelected] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [show, setShow] = React.useState(false);
+  const [shift, setShift] = React.useState(false);
+  const [pairCode, setPairCode] = React.useState("");
+  const [enteredCode, setEnteredCode] = React.useState("");
+  const [unlocked, setUnlocked] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [message, setMessage] = React.useState("");
+  const refresh = async (scan = true) => {
+    setBusy(true);
+    try {
+      update(await window.arcade!.networkStatus(scan));
+      setMessage("");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  React.useEffect(()=>{void refresh(true)},[]);
+  const run = async (fn: () => Promise<NetworkStatus>) => {
+    setBusy(true);
+    setMessage(
+      "Connected phones will temporarily disconnect while NetworkManager applies this change…",
+    );
+    try {
+      const next = await fn();
+      update(next);
+      setSelected("");
+      setPassword("");
+      setMessage(
+        next.connected
+          ? `Connected to ${next.ssid}. New controller address: ${next.controllerUrl}`
+          : "Network change complete.",
+      );
+    } catch (e) {
+      setMessage(
+        `Connection failed. The previous known network was restored when possible. ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const keys = (
+    shift ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "abcdefghijklmnopqrstuvwxyz"
+  )
+    .split("")
+    .concat("1234567890".split(""), "!@#$%^&*()-_=+.".split(""));
+  const selectedNetwork=value?.networks.find(network=>network.ssid===selected);const secured=Boolean(selectedNetwork&&selectedNetwork.security!=="--"&&selectedNetwork.security!=="Open");
+  return (
+    <section>
+      <p className="eyebrow">HOST MAINTENANCE · NETWORKMANAGER</p>
+      <h2>Wi-Fi & Network</h2>
+      <div className={`connection ${value?.connected ? "ok" : "bad"}`}>
+        <b>{value?.connected ? `Connected · ${value.ssid}` : "Offline"}</b>
+        <span>
+          {" "}
+          Signal {value?.signal ?? 0}% · IPv4 {value?.ipv4 ?? "Unavailable"}
+        </span>
+      </div>
+      <section className="wifi-list">{value?.networks.length?value.networks.map(n=><button key={n.ssid} disabled={!unlocked} className={n.active?"active":""} onClick={()=>{setSelected(n.ssid);setPassword("")}}><strong>{n.ssid}</strong><span>{n.active?"CONNECTED · ":""}{n.signal}% · {n.security==="--"?"Open":`🔒 ${n.security}`}{n.saved?" · SAVED":""}</span></button>):<div className="empty">{busy?"Scanning for nearby Wi-Fi…":"No Wi-Fi networks found. Move closer to the router and rescan."}</div>}</section>
+      <div className="panel">
+        <h3>Phone controllers</h3>
+        <code>{value?.controllerUrl}</code>
+        <p>
+          Hostname fallback: <strong>{value?.hostnameUrl}</strong>
+        </p>
+        <p className="hint">
+          Phones must be on a mutually reachable LAN. Guest-network client
+          isolation or firewall rules can block controllers even on the same
+          SSID.
+        </p>
+      </div>
+      {!unlocked ? (
+        <div className="panel">
+          <h3>Owner pairing required</h3>
+          <p>
+            Network changes are not authorized merely because a phone is P1.
+            Start a two-minute local-TV pairing and enter the displayed code.
+          </p>
+          {pairCode ? (
+            <>
+              <div className="pair-code">{pairCode}</div>
+              <input
+                value={enteredCode}
+                readOnly
+                type="password"
+                aria-label="Owner pairing code"
+              />
+              <div className="keyboard digits">
+                {"1234567890".split("").map((k) => (
+                  <button
+                    key={k}
+                    onClick={() => setEnteredCode((v) => (v + k).slice(0, 6))}
+                  >
+                    {k}
+                  </button>
+                ))}
+                <button onClick={() => setEnteredCode((v) => v.slice(0, -1))}>
+                  ⌫
+                </button>
+              </div>
+              <button
+                className="cta"
+                onClick={async () => {
+                  const ok = await window.arcade!.networkAuthorize(enteredCode);
+                  setUnlocked(ok);
+                  setMessage(
+                    ok
+                      ? "Owner controls unlocked for five minutes."
+                      : "Incorrect or expired pairing code.",
+                  );
+                }}
+              >
+                Unlock network controls
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={async () => {
+                const pair = await window.arcade!.networkPairStart();
+                setPairCode(pair.code);
+                setEnteredCode("");
+              }}
+            >
+              Begin owner pairing
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="actions">
+            <button disabled={busy} onClick={() => void refresh(true)}>
+              {busy ? "Scanning…" : "Rescan networks"}
+            </button>
+            {value?.connected ? (
+              <button
+                disabled={busy}
+                onClick={() =>
+                  void run(() => window.arcade!.networkDisconnect())
+                }
+              >
+                Disconnect
+              </button>
+            ) : (
+              <button
+                disabled={busy}
+                onClick={() => void run(() => window.arcade!.networkHotspot())}
+              >
+                Start protected setup hotspot
+              </button>
+            )}
+          </div>
+          {selected && (
+            <div className="panel">
+              <h3>Connect to {selected}</h3>
+              <p className="hint">
+                Existing phone controllers and SSH may disconnect. Pi Arcade
+                will release held inputs and attempt to restore the previous
+                network if authentication fails.
+              </p>
+              {secured?<><input
+                value={password}
+                readOnly
+                type={show ? "text" : "password"}
+                aria-label="Wi-Fi password"
+                placeholder="Wi-Fi password"
+              />
+              <label>
+                <input
+                  type="checkbox"
+                  checked={show}
+                  onChange={(e) => setShow(e.target.checked)}
+                />{" "}
+                Show password
+              </label>
+              <div className="keyboard wifi-keys">
+                {keys.map((k) => (
+                  <button key={k} onClick={() => setPassword((v) => v + k)}>
+                    {k}
+                  </button>
+                ))}
+                <button onClick={() => setShift((v) => !v)}>
+                  {shift ? "lowercase" : "UPPERCASE"}
+                </button>
+                <button onClick={() => setPassword((v) => v.slice(0, -1))}>
+                  ⌫
+                </button>
+                <button onClick={() => setPassword("")}>CLEAR</button>
+              </div></>:<p>This is an open network and does not require a password.</p>}
+              <button
+                className="cta"
+                disabled={busy}
+                onClick={() =>
+                  void run(() =>
+                    window.arcade!.networkConnect(selected, password),
+                  )
+                }
+              >
+                Connect and save securely
+              </button>
+            </div>
+          )}
+          <div className="panel">
+            <h3>Saved networks</h3>
+            <p>{value?.saved.join(" · ") || "None"}</p>
+          </div>
+        </>
+      )}
+      {message && <div className="notice-inline">{message}</div>}
+      <div className="actions">
+        <button onClick={() => void refresh(false)}>Refresh status</button>
+        <button onClick={home}>Return to Home</button>
+      </div>
+    </section>
+  );
+}
 function ControllerTest({
   pad,
   current,

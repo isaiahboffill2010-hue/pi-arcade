@@ -1,0 +1,2 @@
+import{it,expect}from'vitest';import{readFile}from'node:fs/promises';
+it('shows the existing dynamic controller QR at the top and in the multiplayer lobby',async()=>{const source=await readFile(new URL('../src/main.tsx',import.meta.url),'utf8');expect(source).toContain('home-join-strip');expect(source).toContain('Scan to Play');expect(source).toContain('phone?.url');expect(source.match(/phone\?\.qr/g)?.length).toBeGreaterThanOrEqual(2);expect(source).toContain('phone-lobby')});

@@ -619,6 +619,10 @@ function Home({
           </p>
         </section>
       )}
+      <section className="home-join-strip" aria-label="Phone controller quick join">
+        <div className="home-welcome"><p className="eyebrow">PI ARCADE HOME</p><h2>Pick a game. Bring your phone.</h2><p>Player 1 becomes Captain; up to four players can join the local lobby.</p></div>
+        <div className="home-qr"><div><strong>Scan to Play</strong><code>{phone?.url??"Starting controller server…"}</code></div>{phone?.qr?<img src={phone.qr} alt="Scan to open the Pi Arcade phone controller"/>:<div className="qr-loading">QR<br/>STARTING</div>}</div>
+      </section>
       {featured && (
         <section className="featured">
           <Artwork game={featured} wide />

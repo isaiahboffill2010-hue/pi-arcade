@@ -1093,6 +1093,7 @@ function WifiNetworkView({
     <section>
       <p className="eyebrow">HOST MAINTENANCE · NETWORKMANAGER</p>
       <h2>Wi-Fi & Network</h2>
+      <h3 className="network-section-label">Current Network</h3>
       <div className={`connection ${value?.connected ? "ok" : "bad"}`}>
         <b>{value?.connected ? `Connected · ${value.ssid}` : "Offline"}</b>
         <span>
@@ -1100,7 +1101,8 @@ function WifiNetworkView({
           Signal {value?.signal ?? 0}% · IPv4 {value?.ipv4 ?? "Unavailable"}
         </span>
       </div>
-      <section className="wifi-list">{value?.networks.length?value.networks.map(n=><button key={n.ssid} disabled={!unlocked} className={n.active?"active":""} onClick={()=>{setSelected(n.ssid);setPassword("")}}><strong>{n.ssid}</strong><span>{n.active?"CONNECTED · ":""}{n.signal}% · {n.security==="--"?"Open":`🔒 ${n.security}`}{n.saved?" · SAVED":""}</span></button>):<div className="empty">{busy?"Scanning for nearby Wi-Fi…":"No Wi-Fi networks found. Move closer to the router and rescan."}</div>}</section>
+      <div className="network-list-heading"><h3>Available Wi-Fi Networks</h3><button disabled={busy} onClick={()=>void refresh(true)}>{busy?"Scanning…":"Scan Again"}</button></div>
+      <section className="wifi-list">{value?.networks.length?value.networks.map(n=><button key={n.ssid} disabled={busy} className={n.active?"active":""} onClick={()=>{setSelected(n.ssid);setPassword("");setPairCode("");setEnteredCode("")}}><span><strong>{n.ssid}</strong><small>{n.signal}% · {n.security==="--"?"Open":`🔒 ${n.security}`}{n.saved?" · SAVED":""}</small></span><b>{n.active?"Connected":"Connect"}</b></button>):<div className="empty">{busy?"Scanning for nearby Wi-Fi…":value?.scanError??"No broadcast Wi-Fi networks were found. Hidden networks do not advertise a selectable name."}</div>}</section>
       <div className="panel">
         <h3>Phone controllers</h3>
         <code>{value?.controllerUrl}</code>
@@ -1113,9 +1115,9 @@ function WifiNetworkView({
           SSID.
         </p>
       </div>
-      {!unlocked ? (
+      {selected&&!unlocked ? (
         <div className="panel">
-          <h3>Owner pairing required</h3>
+          <h3>Authorize connection to {selected}</h3>
           <p>
             Network changes are not authorized merely because a phone is P1.
             Start a two-minute local-TV pairing and enter the displayed code.
@@ -1168,6 +1170,7 @@ function WifiNetworkView({
               Begin owner pairing
             </button>
           )}
+          <button onClick={()=>{setSelected("");setPairCode("");setEnteredCode("")}}>Cancel</button>
         </div>
       ) : (
         <>
@@ -1177,7 +1180,7 @@ function WifiNetworkView({
             </button>
             {value?.connected ? (
               <button
-                disabled={busy}
+                disabled={busy||!unlocked}
                 onClick={() =>
                   void run(() => window.arcade!.networkDisconnect())
                 }
@@ -1186,7 +1189,7 @@ function WifiNetworkView({
               </button>
             ) : (
               <button
-                disabled={busy}
+                disabled={busy||!unlocked}
                 onClick={() => void run(() => window.arcade!.networkHotspot())}
               >
                 Start protected setup hotspot
@@ -1241,6 +1244,7 @@ function WifiNetworkView({
               >
                 Connect and save securely
               </button>
+              <button onClick={()=>{setSelected("");setPassword("")}}>Cancel</button>
             </div>
           )}
           <div className="panel">

@@ -201,7 +201,7 @@ export interface NativeControllerState {
 }
 export interface PhoneStatus { url:string;qr:string;serverReady:boolean;virtualPads:boolean;players:{slot:number;connected:boolean}[];game?:{title:string;maxPlayers:number} }
 export interface WifiNetwork{ssid:string;signal:number;security:string;active:boolean;saved:boolean}
-export interface NetworkStatus{connected:boolean;ssid:string;signal:number;ipv4:string;hostnameUrl:string;controllerUrl:string;device:string;activeConnection:string;networks:WifiNetwork[];saved:string[];hotspot?:{ssid:string;password:string}}
+export interface NetworkStatus{connected:boolean;ssid:string;signal:number;ipv4:string;hostnameUrl:string;controllerUrl:string;device:string;activeConnection:string;networks:WifiNetwork[];saved:string[];hotspot?:{ssid:string;password:string};scanError?:string}
 export interface ArcadeApi {
   loadState: () => Promise<AppState>;
   saveSettings: (settings: Settings) => Promise<AppState>;

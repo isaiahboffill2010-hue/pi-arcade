@@ -24,6 +24,7 @@ export interface NetworkSnapshot {
   networks: WifiNetwork[];
   saved: string[];
   hotspot?: { ssid: string; password: string };
+  scanError?:string;
 }
 function split(line: string) {
   const out: string[] = [];
@@ -106,6 +107,7 @@ export class NetworkManagerService extends EventEmitter {
       activeConnection="",
       connected = false,
       signal = 0;
+    let scanError="";
     const saved: string[] = [];
     let networks: WifiNetwork[] = [];
     try {
@@ -166,8 +168,8 @@ export class NetworkManagerService extends EventEmitter {
       );
       signal = networks.find((n) => n.active)?.signal ?? 0;
       ssid=networks.find(n=>n.active)?.ssid??activeConnection;
-    } catch {
-      /* status remains safely disconnected */
+    } catch(error) {
+      scanError=`Wi-Fi scan failed: ${error instanceof Error?error.message:String(error)}`;
     }
     const ipv4 = await controllerAddress();
     return {
@@ -182,6 +184,7 @@ export class NetworkManagerService extends EventEmitter {
       networks,
       saved,
       hotspot: this.hotspot,
+      scanError:scanError||undefined,
     };
   }
   async connect(ssid: string, password: string) {

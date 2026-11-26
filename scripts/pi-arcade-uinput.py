@@ -3,6 +3,7 @@ import fcntl, json, os, struct, sys, time
 
 UI_SET_EVBIT, UI_SET_KEYBIT, UI_SET_ABSBIT = 1074025828, 1074025829, 1074025831
 UI_DEV_CREATE, UI_DEV_DESTROY = 21761, 21762
+UI_DEV_SETUP, UI_ABS_SETUP = 0x405C5503, 0x401C5504
 EV_SYN, EV_KEY, EV_ABS, SYN_REPORT, ABS_X, ABS_Y = 0, 1, 3, 0, 0, 1
 KEY = {"a":304,"b":305,"x":307,"y":308,"l":310,"r":311,"select":314,"start":315}
 AXIS = {"left":(ABS_X,-32767),"right":(ABS_X,32767),"up":(ABS_Y,-32767),"down":(ABS_Y,32767)}
@@ -16,12 +17,11 @@ def make(slot):
     for key in KEY.values(): fcntl.ioctl(fd, UI_SET_KEYBIT, key)
     for axis in (ABS_X, ABS_Y): fcntl.ioctl(fd, UI_SET_ABSBIT, axis)
     name = ("Pi Arcade Phone P%d" % slot).encode()[:79]
-    header = struct.pack("80sHHHHi", name, 3, 0x1209, 0x5041 + slot, 1, 0)
-    zeros = [0] * 64
-    maximum = [32767 if i in (0,1) else 0 for i in range(64)]
-    minimum = [-32767 if i in (0,1) else 0 for i in range(64)]
-    fuzz = [16 if i in (0,1) else 0 for i in range(64)]
-    os.write(fd, header + struct.pack("i"*64,*zeros) + struct.pack("i"*64,*maximum) + struct.pack("i"*64,*minimum) + struct.pack("i"*64,*fuzz))
+    setup = struct.pack("HHHH80sI", 3, 0x1209, 0x5041 + slot, 1, name, 0)
+    fcntl.ioctl(fd, UI_DEV_SETUP, setup)
+    for axis in (ABS_X, ABS_Y):
+        absolute = struct.pack("H2xiiiiii", axis, 0, -32767, 32767, 16, 0, 0)
+        fcntl.ioctl(fd, UI_ABS_SETUP, absolute)
     fcntl.ioctl(fd, UI_DEV_CREATE)
     return fd
 

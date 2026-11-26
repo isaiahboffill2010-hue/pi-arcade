@@ -1,10 +1,232 @@
-import{access,mkdir,writeFile}from'node:fs/promises';import path from'node:path';import{profiles}from'../../src/data.js';import type{Game,PhysicalInput,Settings}from'../../src/types.js';
-export interface CommandSpec{command:string;args:string[];configPath:string;corePath:string;workingDirectory?:string}
-const coreFiles:Record<string,string[]>={mesen:['mesen_libretro.dll','mesen_libretro.so'],snes9x:['snes9x_libretro.dll','snes9x_libretro.so'],gambatte:['gambatte_libretro.dll','gambatte_libretro.so'],mgba:['mgba_libretro.dll','mgba_libretro.so'],melonds:['melonds_libretro.dll','melonds_libretro.so'],mupen64plus_next:['mupen64plus_next_libretro.dll','mupen64plus_next_libretro.so'],stella2014:['stella2014_libretro.dll','stella2014_libretro.so'],genesis_plus_gx:['genesis_plus_gx_libretro.dll','genesis_plus_gx_libretro.so'],pcsx_rearmed:['pcsx_rearmed_libretro.dll','pcsx_rearmed_libretro.so'],prboom:['prboom_libretro.dll','prboom_libretro.so'],fbneo:['fbneo_libretro.dll','fbneo_libretro.so'],flycast:['flycast_libretro.dll','flycast_libretro.so'],mame:['mame_libretro.dll','mame_libretro.so'],mame2003_plus:['mame2003_plus_libretro.dll','mame2003_plus_libretro.so']};
-export async function nativeCommand(game:Game):Promise<CommandSpec>{if(!game.filePath||!path.isAbsolute(game.filePath))throw new Error('Native game executable path must be absolute');await access(game.filePath);return{command:game.filePath,args:game.launchArgs??[],configPath:'',corePath:game.filePath,workingDirectory:game.workingDirectory??path.dirname(game.filePath)}}
-export async function executablePath(name='retroarch'){const candidates=process.platform==='win32'?[path.join(process.cwd(),'tools','retroarch','RetroArch-Win64','retroarch.exe'),path.join(process.cwd(),'tools','retroarch','retroarch.exe'),path.join(process.env.APPDATA??'','RetroArch','retroarch.exe'),'C:\\RetroArch-Win64\\retroarch.exe']:['/usr/bin/retroarch','/usr/local/bin/retroarch'];for(const p of candidates)try{await access(p);return p}catch{continue}for(const dir of(process.env.PATH??'').split(path.delimiter)){const p=path.join(dir,process.platform==='win32'?`${name}.exe`:name);try{await access(p);return p}catch{continue}}return undefined}
-export async function corePath(core:string,retroarch:string){const names=coreFiles[core];if(!names)throw new Error(`No core configured for ${core}`);const roots=process.platform==='win32'?[path.join(path.dirname(retroarch),'cores')]:[path.join(process.env.HOME??'','.config','retroarch','cores'),'/usr/lib/aarch64-linux-gnu/libretro','/usr/lib/libretro'];for(const root of roots)for(const name of names){const p=path.join(root,name);try{await access(p);return p}catch{continue}}throw new Error(`Required ${core} core was not found`)}
-export function buildRetroArgs(filePath:string,core:string,configPath:string){if(!path.isAbsolute(filePath))throw new Error('Game path must be absolute');return['--fullscreen','--appendconfig',configPath,'--libretro',core,filePath]}
-function inputLines(game:Game,settings:Settings){const profile=profiles.find(p=>p.id===game.profileId);const physical:Record<string,unknown>=settings.controller?.physicalMapping??{};const button=(control:string)=>{const value=physical[control];const candidate=typeof value==='object'&&value!==null?value as{kind?:unknown;index?:unknown}:undefined;return candidate?.kind==='gamepad-button'&&typeof candidate.index==='number'?candidate.index:typeof value==='number'?value:undefined};const lines=['input_autodetect_enable = "false"','input_player1_joypad_index = "0"','input_enable_hotkey_btn = "nul"','input_exit_emulator_btn = "nul"'];for(const[control,name]of[['UP','up'],['DOWN','down'],['LEFT','left'],['RIGHT','right']]as const){const value=physical[control]as PhysicalInput|undefined;if(value?.kind==='gamepad-axis')lines.push(`input_player1_${name}_btn = "nul"`,`input_player1_${name}_axis = "${value.direction<0?'-':'+'}${value.axis}"`);if(value?.kind==='gamepad-button')lines.push(`input_player1_${name}_axis = "nul"`,`input_player1_${name}_btn = "${value.index}"`)}const select=button('SELECT'),start=button('START');if(select!==undefined)lines.push(`input_player1_select_btn = "${select}"`);if(start!==undefined)lines.push(`input_player1_start_btn = "${start}"`);for(const binding of profile?.bindings??[]){if(!binding.retroPad||binding.retroPad==='dpad')continue;const mapped=button(binding.physical);if(mapped!==undefined)lines.push(`input_player1_${binding.retroPad}_btn = "${mapped}"`)}return lines}
-export async function retroArchCommand(game:Game,settings:Settings,configRoot:string):Promise<CommandSpec>{if(!game.filePath||!path.isAbsolute(game.filePath))throw new Error('Game path must be absolute');await access(game.filePath);const command=await executablePath();if(!command)throw new Error('RetroArch executable was not found');const core=await corePath(game.core,command);await mkdir(path.join(configRoot,'games'),{recursive:true});const configPath=path.join(configRoot,'games',`${game.id.replace(/[^a-z0-9-]/gi,'_')}.cfg`);const autosave=settings.autosave&&process.env.PI_ARCADE_TEST_MODE!=='1';const audioDriver=process.platform==='win32'&&settings.audioDriver==='pulse'?'wasapi':process.platform!=='win32'&&settings.audioDriver==='wasapi'?'pulse':settings.audioDriver;const platformLines=game.platform==='Nintendo 64'?['input_player1_analog_dpad_mode = "1"']:game.platform==='Nintendo DS'?['melonds_touch_mode = "Joystick"']:[];const lines=[`video_fullscreen = "true"`,`video_driver = "${settings.videoDriver}"`,`audio_driver = "${audioDriver}"`,`audio_volume = "${settings.muted?-80:Math.round((settings.volume-100)*.4)}"`,`video_scale_integer = "${settings.integerScale}"`,`savestate_auto_save = "${autosave}"`,`savestate_auto_load = "${autosave}"`,`input_menu_toggle_gamepad_combo = "0"`,`quit_press_twice = "false"`,...platformLines,...inputLines(game,settings)];await writeFile(configPath,lines.join('\n')+'\n');return{command,args:buildRetroArgs(game.filePath,core,configPath),configPath,corePath:core}}
-export{inputLines};
+import { access, mkdir, writeFile, readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+import { profiles } from "../../src/data.js";
+import type { Game, PhysicalInput, Settings } from "../../src/types.js";
+export interface CommandSpec {
+  command: string;
+  args: string[];
+  configPath: string;
+  corePath: string;
+  workingDirectory?: string;
+}
+const coreFiles: Record<string, string[]> = {
+  mesen: ["mesen_libretro.dll", "mesen_libretro.so"],
+  snes9x: ["snes9x_libretro.dll", "snes9x_libretro.so"],
+  gambatte: ["gambatte_libretro.dll", "gambatte_libretro.so"],
+  mgba: ["mgba_libretro.dll", "mgba_libretro.so"],
+  melonds: ["melonds_libretro.dll", "melonds_libretro.so"],
+  mupen64plus_next: [
+    "mupen64plus_next_libretro.dll",
+    "mupen64plus_next_libretro.so",
+  ],
+  stella2014: ["stella2014_libretro.dll", "stella2014_libretro.so"],
+  genesis_plus_gx: [
+    "genesis_plus_gx_libretro.dll",
+    "genesis_plus_gx_libretro.so",
+  ],
+  pcsx_rearmed: ["pcsx_rearmed_libretro.dll", "pcsx_rearmed_libretro.so"],
+  prboom: ["prboom_libretro.dll", "prboom_libretro.so"],
+  fbneo: ["fbneo_libretro.dll", "fbneo_libretro.so"],
+  flycast: ["flycast_libretro.dll", "flycast_libretro.so"],
+  mame: ["mame_libretro.dll", "mame_libretro.so"],
+  mame2003_plus: ["mame2003_plus_libretro.dll", "mame2003_plus_libretro.so"],
+};
+export async function nativeCommand(game: Game): Promise<CommandSpec> {
+  if (!game.filePath || !path.isAbsolute(game.filePath))
+    throw new Error("Native game executable path must be absolute");
+  await access(game.filePath);
+  return {
+    command: game.filePath,
+    args: game.launchArgs ?? [],
+    configPath: "",
+    corePath: game.filePath,
+    workingDirectory: game.workingDirectory ?? path.dirname(game.filePath),
+  };
+}
+export async function executablePath(name = "retroarch") {
+  const candidates =
+    process.platform === "win32"
+      ? [
+          path.join(
+            process.cwd(),
+            "tools",
+            "retroarch",
+            "RetroArch-Win64",
+            "retroarch.exe",
+          ),
+          path.join(process.cwd(), "tools", "retroarch", "retroarch.exe"),
+          path.join(process.env.APPDATA ?? "", "RetroArch", "retroarch.exe"),
+          "C:\\RetroArch-Win64\\retroarch.exe",
+        ]
+      : ["/usr/bin/retroarch", "/usr/local/bin/retroarch"];
+  for (const p of candidates)
+    try {
+      await access(p);
+      return p;
+    } catch {
+      continue;
+    }
+  for (const dir of (process.env.PATH ?? "").split(path.delimiter)) {
+    const p = path.join(
+      dir,
+      process.platform === "win32" ? `${name}.exe` : name,
+    );
+    try {
+      await access(p);
+      return p;
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+}
+export async function corePath(core: string, retroarch: string) {
+  const names = coreFiles[core];
+  if (!names) throw new Error(`No core configured for ${core}`);
+  const roots =
+    process.platform === "win32"
+      ? [path.join(path.dirname(retroarch), "cores")]
+      : [
+          path.join(process.env.HOME ?? "", ".config", "retroarch", "cores"),
+          "/usr/lib/aarch64-linux-gnu/libretro",
+          "/usr/lib/libretro",
+        ];
+  for (const root of roots)
+    for (const name of names) {
+      const p = path.join(root, name);
+      try {
+        await access(p);
+        return p;
+      } catch {
+        continue;
+      }
+    }
+  throw new Error(`Required ${core} core was not found`);
+}
+export function buildRetroArgs(
+  filePath: string,
+  core: string,
+  configPath: string,
+) {
+  if (!path.isAbsolute(filePath)) throw new Error("Game path must be absolute");
+  return [
+    "--fullscreen",
+    "--appendconfig",
+    configPath,
+    "--libretro",
+    core,
+    filePath,
+  ];
+}
+function inputLines(game: Game, settings: Settings, phoneIndexes:number[] = []) {
+  const profile = profiles.find((p) => p.id === game.profileId);
+  const physical: Record<string, unknown> =
+    settings.controller?.physicalMapping ?? {};
+  const button = (control: string) => {
+    const value = physical[control];
+    const candidate =
+      typeof value === "object" && value !== null
+        ? (value as { kind?: unknown; index?: unknown })
+        : undefined;
+    return candidate?.kind === "gamepad-button" &&
+      typeof candidate.index === "number"
+      ? candidate.index
+      : typeof value === "number"
+        ? value
+        : undefined;
+  };
+  const lines = [
+    'input_autodetect_enable = "false"',
+    'input_player1_joypad_index = "0"',
+    'input_enable_hotkey_btn = "nul"',
+    'input_exit_emulator_btn = "nul"',
+  ];
+  for (const [control, name] of [
+    ["UP", "up"],
+    ["DOWN", "down"],
+    ["LEFT", "left"],
+    ["RIGHT", "right"],
+  ] as const) {
+    const value = physical[control] as PhysicalInput | undefined;
+    if (value?.kind === "gamepad-axis")
+      lines.push(
+        `input_player1_${name}_btn = "nul"`,
+        `input_player1_${name}_axis = "${value.direction < 0 ? "-" : "+"}${value.axis}"`,
+      );
+    if (value?.kind === "gamepad-button")
+      lines.push(
+        `input_player1_${name}_axis = "nul"`,
+        `input_player1_${name}_btn = "${value.index}"`,
+      );
+  }
+  const select = button("SELECT"),
+    start = button("START");
+  if (select !== undefined)
+    lines.push(`input_player1_select_btn = "${select}"`);
+  if (start !== undefined) lines.push(`input_player1_start_btn = "${start}"`);
+  for (const binding of profile?.bindings ?? []) {
+    if (!binding.retroPad || binding.retroPad === "dpad") continue;
+    const mapped = button(binding.physical);
+    if (mapped !== undefined)
+      lines.push(`input_player1_${binding.retroPad}_btn = "${mapped}"`);
+  }
+  for(let player=1;player<=4;player++){
+    const index=phoneIndexes[player-1];if(index===undefined)continue;
+    lines.push(`input_player${player}_joypad_index = "${index}"`,`input_player${player}_up_axis = "-1"`,`input_player${player}_down_axis = "+1"`,`input_player${player}_left_axis = "-0"`,`input_player${player}_right_axis = "+0"`,`input_player${player}_a_btn = "1"`,`input_player${player}_b_btn = "0"`,`input_player${player}_x_btn = "3"`,`input_player${player}_y_btn = "2"`,`input_player${player}_l_btn = "4"`,`input_player${player}_r_btn = "5"`,`input_player${player}_select_btn = "6"`,`input_player${player}_start_btn = "7"`);
+  }
+  return lines;
+}
+async function phoneJoypadIndexes(){if(process.platform!=="linux")return[];try{const names=await readdir("/sys/class/input");const found:Record<number,number>={};for(const name of names.filter(n=>/^js\d+$/.test(n))){const label=(await readFile(`/sys/class/input/${name}/device/name`,"utf8")).trim();const match=label.match(/^Pi Arcade Phone P([1-4])$/);if(match)found[Number(match[1])]=Number(name.slice(2))}return[1,2,3,4].map(n=>found[n]).filter((n):n is number=>n!==undefined)}catch{return[]}}
+export async function retroArchCommand(
+  game: Game,
+  settings: Settings,
+  configRoot: string,
+): Promise<CommandSpec> {
+  if (!game.filePath || !path.isAbsolute(game.filePath))
+    throw new Error("Game path must be absolute");
+  await access(game.filePath);
+  const command = await executablePath();
+  if (!command) throw new Error("RetroArch executable was not found");
+  const core = await corePath(game.core, command);
+  await mkdir(path.join(configRoot, "games"), { recursive: true });
+  const configPath = path.join(
+    configRoot,
+    "games",
+    `${game.id.replace(/[^a-z0-9-]/gi, "_")}.cfg`,
+  );
+  const autosave = settings.autosave && process.env.PI_ARCADE_TEST_MODE !== "1";
+  const audioDriver =
+    process.platform === "win32" && settings.audioDriver === "pulse"
+      ? "wasapi"
+      : process.platform !== "win32" && settings.audioDriver === "wasapi"
+        ? "pulse"
+        : settings.audioDriver;
+  const platformLines =
+    game.platform === "Nintendo 64"
+      ? ['input_player1_analog_dpad_mode = "1"']
+      : game.platform === "Nintendo DS"
+        ? ['melonds_touch_mode = "Joystick"']
+        : [];
+  const phoneIndexes=await phoneJoypadIndexes();
+  const lines = [
+    `video_fullscreen = "true"`,
+    `video_driver = "${settings.videoDriver}"`,
+    `audio_driver = "${audioDriver}"`,
+    `audio_volume = "${settings.muted ? -80 : Math.round((settings.volume - 100) * 0.4)}"`,
+    `video_scale_integer = "${settings.integerScale}"`,
+    `savestate_auto_save = "${autosave}"`,
+    `savestate_auto_load = "${autosave}"`,
+    `input_menu_toggle_gamepad_combo = "0"`,
+    `quit_press_twice = "false"`,
+    ...platformLines,
+    ...inputLines(game, settings, phoneIndexes),
+  ];
+  await writeFile(configPath, lines.join("\n") + "\n");
+  return {
+    command,
+    args: buildRetroArgs(game.filePath, core, configPath),
+    configPath,
+    corePath: core,
+  };
+}
+export { inputLines };

@@ -17,7 +17,7 @@ ARCH="$(uname -m)";MODEL="unknown";[[ -r /proc/device-tree/model ]]&&MODEL="$(tr
 if ! $ALLOW_NON_PI;then [[ "$ARCH" == aarch64 ]]||{ echo "ERROR: aarch64 required (found $ARCH)";exit 1; };[[ "$MODEL" == *'Raspberry Pi 5'* ]]||{ echo "ERROR: Raspberry Pi 5 required (found $MODEL)";exit 1; };fi
 available_kb=$(df -Pk "$HOME"|awk 'NR==2{print $4}');((available_kb>=4194304))||{ echo 'ERROR: at least 4 GiB free required';exit 1; }
 ROOT="$(cd "$(dirname "$0")/.."&&pwd)";APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/pi-arcade";BIN_DIR="$HOME/.local/bin";CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/pi-arcade";GAME_DIR="$HOME/Games/Arcade";PREPARED_GAME_DIR="$HOME/Arcade-Game-Library/Prepared-Games";SAVE_DIR="$HOME/Games/Arcade-Saves";REPORT="$CONFIG_DIR/install-report.txt"
-log "Host: $MODEL / $ARCH";run sudo apt-get update;run sudo apt-get install -y nodejs npm retroarch retroarch-assets joystick evtest curl ca-certificates unzip
+log "Host: $MODEL / $ARCH";run sudo apt-get update;run sudo apt-get install -y retroarch retroarch-assets joystick evtest curl ca-certificates unzip
 if ! $DRY_RUN;then
   NODE_MAJOR="$(node --version 2>/dev/null|sed -E 's/^v([0-9]+).*/\1/'||echo 0)"
   if ((NODE_MAJOR<22));then
